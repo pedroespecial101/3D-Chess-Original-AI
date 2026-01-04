@@ -1,4 +1,42 @@
 # Changelog
+I've updated the changelog to include the new zoom and debug settings.
+
+## [2026-01-04]
+### Added
+- Created a new `DebugSettings` component for runtime configuration.
+- Added a "Debug" toggle button to the main UI.
+- Introduced `minZoom`, `maxZoom`, `enablePanning`, and `showDebugSettings` to the global game state.
+- Added a "Reset Camera" button to the debug panel.
+- Added "Enable Panning" toggle to the debug panel (enables right-click dragging).
+
+### Changed
+- Increased maximum zoom level (allowing closer inspection of characters).
+- Connected `BoardComponent`'s `OrbitControls` to dynamic zoom limits from the state.
+- Updated `BoardComponent` to support manual camera reset and right-click panning.
+
+---
+
+## [2026-01-04]
+### Added
+- Integrated Cyberman model for black side rooks.
+- Added `Cyberman.tsx` component with SkinnedMesh support and metallic materials.
+
+### Changed
+- Updated `Rook.tsx` to render Cyberman for black rooks (Tardis for white, Cyberman for black).
+
+---
+
+## [2026-01-04]
+### Added
+- Integrated TARDIS (William Hartnell era) model for white side rooks.
+- Added `Tardis.tsx` component with optimized asset loading and metallic materials.
+- Extended side-specific model pattern: white rooks use TARDIS, black rooks use standard model.
+
+### Changed
+- Updated `Board.tsx` to set `isFullModel={true}` for white rooks.
+- Updated `Rook.tsx` to conditionally render models based on piece color.
+
+---
 
 ## [2026-01-04]
 ### Added

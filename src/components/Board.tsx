@@ -1,5 +1,5 @@
 import type { FC } from 'react'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 
 import type { Position, Tile, Board } from '@logic/board'
 import { checkIfPositionsMatch, copyBoard } from '@logic/board'
@@ -209,7 +209,25 @@ export const BoardComponent: FC<{
       intensity: selected ? 0.35 : 0,
     })
 
+    const controlsRef = useRef<any>(null)
     const { camera } = useThree()
+
+    const { minZoom, maxZoom, enablePanning, cameraResetCounter } = useGameSettingsState((state) => ({
+      minZoom: state.minZoom,
+      maxZoom: state.maxZoom,
+      enablePanning: state.enablePanning,
+      cameraResetCounter: state.cameraResetCounter,
+    }))
+
+    useEffect(() => {
+      if (cameraResetCounter > 0) {
+        camera.position.set(-12, 5, 6)
+        if (controlsRef.current) {
+          controlsRef.current.target.set(0, 0, 0)
+          controlsRef.current.update()
+        }
+      }
+    }, [cameraResetCounter, camera])
 
     useEffect(() => {
       const interval = setInterval(() => {
@@ -226,10 +244,11 @@ export const BoardComponent: FC<{
     return (
       <group position={[-3.5, -0.5, -3.5]}>
         <OrbitControls
-          maxDistance={25}
-          minDistance={7}
+          ref={controlsRef}
+          maxDistance={maxZoom}
+          minDistance={minZoom}
           enableZoom={true}
-          enablePan={false}
+          enablePan={enablePanning}
         />
         <pointLight
           shadow-mapSize={[2048, 2048]}
@@ -309,7 +328,7 @@ export const BoardComponent: FC<{
             }
 
             const pieceId = tile.piece?.getId() ?? `empty-${j}-${i}`
-            const isFullModel = tile.piece?.type === `pawn`
+            const isFullModel = tile.piece?.type === `pawn` || (tile.piece?.type === `rook` && tile.piece?.color === `white`)
 
             return (
               <group key={`${j}-${i}`}>
@@ -321,7 +340,7 @@ export const BoardComponent: FC<{
                 />
                 <MeshWrapper key={pieceId} {...props} isFullModel={isFullModel}>
                   {tile.piece?.type === `pawn` && <PawnModel {...props} />}
-                  {tile.piece?.type === `rook` && <RookComponent />}
+                  {tile.piece?.type === `rook` && <RookComponent {...props} />}
                   {tile.piece?.type === `knight` && <KnightComponent />}
                   {tile.piece?.type === `bishop` && <BishopComponent />}
                   {tile.piece?.type === `queen` && <QueenComponent />}

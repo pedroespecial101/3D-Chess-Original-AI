@@ -17,6 +17,7 @@ import { Opponent } from '@/components/Opponent'
 import { Sidebar } from '@/components/Sidebar'
 import { StatusBar } from '@/components/StatusBar'
 import { Toast } from '@/components/Toast'
+import { DebugSettings } from '@/components/DebugSettings'
 import { Border } from '@/models/Border'
 import { useGameSettingsState } from '@/state/game'
 import { useHistoryState } from '@/state/history'
@@ -40,6 +41,10 @@ export const Home: FC = () => {
   }))
   const { joined } = usePlayerState((state) => ({
     joined: state.joinedRoom,
+  }))
+  const { setShowDebugSettings, showDebugSettings } = useGameSettingsState((state) => ({
+    setShowDebugSettings: state.setShowDebugSettings,
+    showDebugSettings: state.showDebugSettings,
   }))
 
   const reset = () => {
@@ -76,6 +81,32 @@ export const Home: FC = () => {
       <Sidebar board={board} moves={moves} selected={selected} />
       {joined && <Chat />}
       <StatusBar />
+      <DebugSettings />
+      <button
+        onClick={() => setShowDebugSettings(!showDebugSettings)}
+        css={css`
+          position: fixed;
+          bottom: 20px;
+          right: 20px;
+          background: rgba(0, 0, 0, 0.6);
+          backdrop-filter: blur(5px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          color: white;
+          padding: 8px 16px;
+          border-radius: 20px;
+          cursor: pointer;
+          font-size: 0.8rem;
+          font-weight: 500;
+          transition: all 0.2s;
+          z-index: 100;
+          &:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.4);
+          }
+        `}
+      >
+        Debug
+      </button>
       <GameOverScreen gameOver={gameOver} />
       <Toast />
       <Canvas shadows camera={{ position: [-12, 5, 6], fov: 50 }}>

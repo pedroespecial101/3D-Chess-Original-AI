@@ -14,6 +14,16 @@ export const useGameSettingsState = create<{
   setGameStarted: (started: boolean) => void
   movingTo: MovingTo | null
   setMovingTo: (move: MovingTo | null) => void
+  minZoom: number
+  setMinZoom: (zoom: number) => void
+  maxZoom: number
+  setMaxZoom: (zoom: number) => void
+  showDebugSettings: boolean
+  setShowDebugSettings: (show: boolean) => void
+  enablePanning: boolean
+  setEnablePanning: (enable: boolean) => void
+  cameraResetCounter: number
+  triggerCameraReset: () => void
 }>((set) => ({
   gameType: `online`,
   setGameType: (type) => set({ gameType: type }),
@@ -24,4 +34,14 @@ export const useGameSettingsState = create<{
   setGameStarted: (started: boolean) => set({ gameStarted: started }),
   movingTo: null,
   setMovingTo: (move: MovingTo | null) => set({ movingTo: move }),
+  minZoom: 3,
+  setMinZoom: (zoom: number) => set({ minZoom: zoom }),
+  maxZoom: 25,
+  setMaxZoom: (zoom: number) => set({ maxZoom: zoom }),
+  showDebugSettings: false,
+  setShowDebugSettings: (show: boolean) => set({ showDebugSettings: show }),
+  enablePanning: false,
+  setEnablePanning: (enable: boolean) => set({ enablePanning: enable }),
+  cameraResetCounter: 0,
+  triggerCameraReset: () => set((state) => ({ cameraResetCounter: state.cameraResetCounter + 1 })),
 }))

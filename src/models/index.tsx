@@ -45,6 +45,7 @@ export type ModelProps = JSX.IntrinsicElements[`group`] & {
   finishMovingPiece: () => void
   pieceIsBeingReplaced: boolean
   wasSelected: boolean
+  isFullModel?: boolean
 }
 
 export const MeshWrapper: FC<ModelProps> = ({
@@ -54,13 +55,17 @@ export const MeshWrapper: FC<ModelProps> = ({
   children,
   pieceIsBeingReplaced,
   wasSelected,
+  isFullModel,
   ...props
 }) => {
   const ref = useRef(null)
   const meshRef = useRef(null)
+
+  const MotionComponent = (isFullModel ? motion.group : motion.mesh) as any
+
   return (
     <group ref={ref} {...props} dispose={null} castShadow>
-      <motion.mesh
+      <MotionComponent
         ref={meshRef}
         scale={0.03}
         castShadow={pieceIsBeingReplaced ? false : true}
@@ -70,21 +75,21 @@ export const MeshWrapper: FC<ModelProps> = ({
           movingTo
             ? variants.move({ movingTo, isSelected: true })
             : pieceIsBeingReplaced
-            ? variants.replace({ movingTo, isSelected })
-            : isSelected
-            ? variants.select({ movingTo, isSelected })
-            : variants.initial({ movingTo, isSelected })
+              ? variants.replace({ movingTo, isSelected })
+              : isSelected
+                ? variants.select({ movingTo, isSelected })
+                : variants.initial({ movingTo, isSelected })
         }
         transition={
           movingTo
             ? transitions.moveTo
             : pieceIsBeingReplaced
-            ? transitions.replace
-            : isSelected
-            ? transitions.select
-            : wasSelected
-            ? transitions.wasSelected
-            : transitions.initial
+              ? transitions.replace
+              : isSelected
+                ? transitions.select
+                : wasSelected
+                  ? transitions.wasSelected
+                  : transitions.initial
         }
         onAnimationComplete={() => {
           if (movingTo) {
@@ -93,12 +98,14 @@ export const MeshWrapper: FC<ModelProps> = ({
         }}
       >
         {children}
-        <PieceMaterial
-          color={props.color}
-          pieceIsBeingReplaced={pieceIsBeingReplaced}
-          isSelected={isSelected}
-        />
-      </motion.mesh>
+        {!isFullModel && (
+          <PieceMaterial
+            color={props.color}
+            pieceIsBeingReplaced={pieceIsBeingReplaced}
+            isSelected={isSelected}
+          />
+        )}
+      </MotionComponent>
     </group>
   )
 }

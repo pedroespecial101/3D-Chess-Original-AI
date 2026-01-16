@@ -1,5 +1,6 @@
 import type { FC } from 'react'
 import React, { useEffect, useState } from 'react'
+import { toast } from 'react-toastify'
 
 import type { Position, Tile, Board } from '@logic/board'
 import { checkIfPositionsMatch, copyBoard } from '@logic/board'
@@ -36,6 +37,10 @@ import { useHistoryState } from '@/state/history'
 import { usePlayerState } from '@/state/player'
 import { isDev } from '@/utils/isDev'
 import { useSocketState } from '@/utils/socket'
+import { useAiState } from '@/state/ai'
+import { aiClient } from '@/utils/aiClient'
+import { fromChessNotation, historyToUciMoves } from '@/utils/chess'
+import { useShallow } from 'zustand/react/shallow'
 
 type ThreeMouseEvent = {
   stopPropagation: () => void
@@ -67,269 +72,320 @@ export const BoardComponent: FC<{
   setMoves,
   setGameOver,
 }) => {
-  const [lastSelected, setLastSelected] = useState<Tile | null>(null)
-  const [history, setHistory] = useHistoryState((state) => [
-    state.history,
-    state.addItem,
-  ])
-  const { playerColor, room } = usePlayerState((state) => ({
-    playerColor: state.playerColor,
-    room: state.room,
-  }))
-  const [turn, setTurn, gameStarted, movingTo, setMovingTo] =
-    useGameSettingsState((state) => [
-      state.turn,
-      state.setTurn,
-      state.gameStarted,
-      state.movingTo,
-      state.setMovingTo,
-    ])
-  const socket = useSocketState((state) => state.socket)
+    const [lastSelected, setLastSelected] = useState<Tile | null>(null)
+    const [history, setHistory] = useHistoryState(useShallow((state) => [
+      state.history,
+      state.addItem,
+    ]))
+    const { playerColor, room } = usePlayerState(useShallow((state) => ({
+      playerColor: state.playerColor,
+      room: state.room,
+    })))
+    const [turn, setTurn, gameStarted, movingTo, setMovingTo, gameType] =
+      useGameSettingsState(useShallow((state) => [
+        state.turn,
+        state.setTurn,
+        state.gameStarted,
+        state.movingTo,
+        state.setMovingTo,
+        state.gameType,
+      ]))
+    const socket = useSocketState((state) => state.socket)
+    const { currentConfig } = useAiState(useShallow((state) => state))
 
-  const [redLightPosition, setRedLightPosition] = useState<Position>({
-    x: 0,
-    y: 0,
-  })
-
-  const selectThisPiece = (e: ThreeMouseEvent, tile: Tile | null) => {
-    e.stopPropagation()
-    const isPlayersTurn = turn === playerColor || isDev
-    if (!isPlayersTurn || !gameStarted) return
-    if (!tile?.piece?.type && !selected) return
-    if (!tile?.piece) {
-      setSelected(null)
-      return
-    }
-
-    setMovingTo(null)
-    setMoves(
-      movesForPiece({ piece: tile.piece, board, propagateDetectCheck: true }),
-    )
-    setSelected(tile.piece)
-    setLastSelected(tile)
-    setRedLightPosition(tile.position)
-  }
-
-  const finishMovingPiece = (tile: Tile | null) => {
-    if (!tile || !movingTo || !socket) return
-    const newHistoryItem = {
-      board: copyBoard(board),
-      to: movingTo.move.newPosition,
-      from: movingTo.move.piece.position,
-      steps: movingTo.move.steps,
-      capture: movingTo.move.capture,
-      type: movingTo.move.type,
-      piece: movingTo.move.piece,
-    }
-    setHistory(newHistoryItem)
-    setBoard((prev) => {
-      const newBoard = copyBoard(prev)
-      if (!movingTo.move.piece) return prev
-      const selectedTile = getTile(newBoard, movingTo.move.piece.position)
-      const tileToMoveTo = getTile(newBoard, tile.position)
-      if (!selectedTile || !tileToMoveTo) return prev
-
-      if (
-        isPawn(selectedTile.piece) ||
-        isKing(selectedTile.piece) ||
-        isRook(selectedTile.piece)
-      ) {
-        selectedTile.piece = { ...selectedTile.piece, hasMoved: true }
-      }
-      if (isPawn(selectedTile.piece) && shouldPromotePawn({ tile })) {
-        selectedTile.piece.type = `queen`
-        selectedTile.piece.id = selectedTile.piece.id + 1
-      }
-
-      if (
-        isPawn(selectedTile.piece) &&
-        movingTo.move.type === `captureEnPassant`
-      ) {
-        const latestMove = history[history.length - 1]
-        const enPassantTile = newBoard[latestMove.to.y][latestMove.to.x]
-        enPassantTile.piece = null
-      }
-
-      if (movingTo.move.castling) {
-        const rookTile =
-          newBoard[movingTo.move.castling.rook.position.y][
-            movingTo.move.castling.rook.position.x
-          ]
-        const rookTileToMoveTo =
-          newBoard[movingTo.move.castling.rookNewPosition.y][
-            movingTo.move.castling.rookNewPosition.x
-          ]
-        if (!isRook(rookTile.piece)) return prev
-
-        rookTileToMoveTo.piece = {
-          ...rookTile.piece,
-          hasMoved: true,
-          position: rookTileToMoveTo.position,
-        }
-        rookTile.piece = null
-      }
-
-      tileToMoveTo.piece = selectedTile.piece
-        ? { ...selectedTile.piece, position: tile.position }
-        : null
-      selectedTile.piece = null
-      return newBoard
+    const [redLightPosition, setRedLightPosition] = useState<Position>({
+      x: 0,
+      y: 0,
     })
 
-    setTurn()
+    // AI Turn Logic
+    useEffect(() => {
+      if (gameType !== 'local_ai' || turn !== 'black' || !gameStarted) return
+      const gameOverType = detectGameOver(board, turn)
+      if (gameOverType) return
 
-    setMovingTo(null)
-    setMoves([])
-    setSelected(null)
-    setLastSelected(null)
-  }
-
-  useEffect(() => {
-    const gameOverType = detectGameOver(board, turn)
-    if (gameOverType) {
-      setGameOver({ type: gameOverType, winner: oppositeColor(turn) })
-    }
-  }, [board, turn])
-
-  const startMovingPiece = (e: ThreeMouseEvent, tile: Tile, nextTile: Move) => {
-    e.stopPropagation()
-    if (!socket) return
-    const newMovingTo: MovingTo = {
-      move: nextTile,
-      tile: tile,
-    }
-    const makeMove: MakeMoveClient = {
-      movingTo: newMovingTo,
-      room: room,
-    }
-    socket.emit(`makeMove`, makeMove)
-  }
-
-  const { intensity } = useSpring({
-    intensity: selected ? 0.35 : 0,
-  })
-
-  const { camera } = useThree()
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const { x, y, z } = camera.position
-      socket?.emit(`cameraMove`, {
-        position: [x, y, z],
-        room: room,
-        color: playerColor,
-      } satisfies CameraMove)
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [camera.position, socket, room, playerColor])
-
-  return (
-    <group position={[-3.5, -0.5, -3.5]}>
-      <OrbitControls
-        maxDistance={25}
-        minDistance={7}
-        enableZoom={true}
-        enablePan={false}
-      />
-      <pointLight
-        shadow-mapSize={[2048, 2048]}
-        castShadow
-        position={[3.5, 10, 3.5]}
-        intensity={0.65}
-        color="#ffe0ec"
-      />
-      <hemisphereLight intensity={0.5} color="#ffa4a4" groundColor="#d886b7" />
-      {/* @ts-ignore */}
-      <animated.pointLight
-        intensity={intensity}
-        color="red"
-        position={[redLightPosition.x, 1, redLightPosition.y]}
-      />
-      {board.map((row, i) => {
-        return row.map((tile, j) => {
-          const bg = `${(i + j) % 2 === 0 ? `white` : `black`}`
-          const isSelected =
-            tile.piece && selected?.getId() === tile.piece.getId()
-
-          const canMoveHere = checkIfSelectedPieceCanMoveHere({
-            tile,
-            moves,
-            selected,
+      const makeAiMove = async () => {
+        try {
+          const uciMoves = historyToUciMoves(history)
+          const res = await aiClient.getMove(null, {
+            moves: uciMoves,
+            skillLevel: currentConfig.skillLevel,
+            depth: currentConfig.depth,
+            movetime: currentConfig.movetime,
+            eloRating: currentConfig.useElo ? currentConfig.eloRating : undefined,
           })
 
-          const tileId = tile.piece?.getId()
-          const pieceIsBeingReplaced =
-            movingTo?.move.piece && tile.piece && movingTo?.move.capture
-              ? tileId === createId(movingTo?.move.capture)
-              : false
-          const rookCastled = movingTo?.move.castling?.rook
-          const isBeingCastled =
-            rookCastled && createId(rookCastled) === tile.piece?.getId()
+          if (res.bestmove) {
+            const { from, to } = fromChessNotation(res.bestmove)
+            const fromTile = board[from.y][from.x]
 
-          const handleClick = (e: ThreeMouseEvent) => {
-            if (movingTo) {
-              return
+            if (fromTile?.piece) {
+              const legalMoves = movesForPiece({ piece: fromTile.piece, board, propagateDetectCheck: true })
+              const moveObj = legalMoves.find(m => m.newPosition.x === to.x && m.newPosition.y === to.y)
+              if (moveObj) {
+                // Trigger AI move (delay slightly for realism/visuals if needed, or just go)
+                setMovingTo({ move: moveObj, tile: fromTile })
+              } else {
+                console.warn(`AI suggested illegal move: ${res.bestmove}`)
+                // Check if promotion is the issue (e.g. AI says a7a8q but we only found a7a8)
+                // The logic/pieces usually returns moves that imply promotion if pawn reaches end?
+                // Assuming logic is sound for now.
+              }
+            }
+          }
+        } catch (e) {
+          console.error('AI Move Error', e)
+          toast.error('AI failed to move')
+        }
+      }
+      makeAiMove()
+    }, [turn, gameType, gameStarted, board, history, currentConfig])
+
+
+    const selectThisPiece = (e: ThreeMouseEvent, tile: Tile | null) => {
+      e.stopPropagation()
+      const isPlayersTurn = turn === playerColor || isDev || (gameType === 'local_ai' && turn === 'white')
+      if (!isPlayersTurn || !gameStarted) return
+      if (!tile?.piece?.type && !selected) return
+      if (!tile?.piece) {
+        setSelected(null)
+        return
+      }
+
+      setMovingTo(null)
+      setMoves(
+        movesForPiece({ piece: tile.piece, board, propagateDetectCheck: true }),
+      )
+      setSelected(tile.piece)
+      setLastSelected(tile)
+      setRedLightPosition(tile.position)
+    }
+
+    const finishMovingPiece = (tile: Tile | null) => {
+      if (!tile || !movingTo) return // removed socket check for local
+      const newHistoryItem = {
+        board: copyBoard(board),
+        to: movingTo.move.newPosition,
+        from: movingTo.move.piece.position,
+        steps: movingTo.move.steps,
+        capture: movingTo.move.capture,
+        type: movingTo.move.type,
+        piece: movingTo.move.piece,
+      }
+      setHistory(newHistoryItem)
+      setBoard((prev) => {
+        const newBoard = copyBoard(prev)
+        if (!movingTo.move.piece) return prev
+        const selectedTile = getTile(newBoard, movingTo.move.piece.position)
+        const tileToMoveTo = getTile(newBoard, tile.position)
+        if (!selectedTile || !tileToMoveTo) return prev
+
+        if (
+          isPawn(selectedTile.piece) ||
+          isKing(selectedTile.piece) ||
+          isRook(selectedTile.piece)
+        ) {
+          selectedTile.piece = { ...selectedTile.piece, hasMoved: true }
+        }
+        if (isPawn(selectedTile.piece) && shouldPromotePawn({ tile })) {
+          selectedTile.piece.type = `queen`
+          selectedTile.piece.id = selectedTile.piece.id + 1
+        }
+
+        if (
+          isPawn(selectedTile.piece) &&
+          movingTo.move.type === `captureEnPassant`
+        ) {
+          const latestMove = history[history.length - 1]
+          const enPassantTile = newBoard[latestMove.to.y][latestMove.to.x]
+          enPassantTile.piece = null
+        }
+
+        if (movingTo.move.castling) {
+          const rookTile =
+            newBoard[movingTo.move.castling.rook.position.y][
+            movingTo.move.castling.rook.position.x
+            ]
+          const rookTileToMoveTo =
+            newBoard[movingTo.move.castling.rookNewPosition.y][
+            movingTo.move.castling.rookNewPosition.x
+            ]
+          if (!isRook(rookTile.piece)) return prev
+
+          rookTileToMoveTo.piece = {
+            ...rookTile.piece,
+            hasMoved: true,
+            position: rookTileToMoveTo.position,
+          }
+          rookTile.piece = null
+        }
+
+        tileToMoveTo.piece = selectedTile.piece
+          ? { ...selectedTile.piece, position: tile.position }
+          : null
+        selectedTile.piece = null
+        return newBoard
+      })
+
+      setTurn()
+
+      setMovingTo(null)
+      setMoves([])
+      setSelected(null)
+      setLastSelected(null)
+    }
+
+    useEffect(() => {
+      const gameOverType = detectGameOver(board, turn)
+      if (gameOverType) {
+        setGameOver({ type: gameOverType, winner: oppositeColor(turn) })
+      }
+    }, [board, turn])
+
+    const startMovingPiece = (e: ThreeMouseEvent | null, tile: Tile, nextTile: Move) => {
+      e?.stopPropagation()
+      const newMovingTo: MovingTo = {
+        move: nextTile,
+        tile: tile,
+      }
+
+      if (gameType === 'local_ai') {
+        setMovingTo(newMovingTo)
+      } else if (socket) {
+        const makeMove: MakeMoveClient = {
+          movingTo: newMovingTo,
+          room: room,
+        }
+        socket.emit(`makeMove`, makeMove)
+      }
+    }
+
+    const { intensity } = useSpring({
+      intensity: selected ? 0.35 : 0,
+    })
+
+    const { camera } = useThree()
+
+    useEffect(() => {
+      if (gameType === 'local_ai') return // Disable camera sync for local
+      const interval = setInterval(() => {
+        const { x, y, z } = camera.position
+        socket?.emit(`cameraMove`, {
+          position: [x, y, z],
+          room: room,
+          color: playerColor,
+        } satisfies CameraMove)
+      }, 1000)
+      return () => clearInterval(interval)
+    }, [camera.position, socket, room, playerColor, gameType])
+
+    return (
+      <group position={[-3.5, -0.5, -3.5]}>
+        <OrbitControls
+          maxDistance={25}
+          minDistance={7}
+          enableZoom={true}
+          enablePan={false}
+        />
+        <pointLight
+          shadow-mapSize={[2048, 2048]}
+          castShadow
+          position={[3.5, 10, 3.5]}
+          intensity={0.65}
+          color="#ffe0ec"
+        />
+        <hemisphereLight intensity={0.5} color="#ffa4a4" groundColor="#d886b7" />
+        {/* @ts-ignore */}
+        <animated.pointLight
+          intensity={intensity}
+          color="red"
+          position={[redLightPosition.x, 1, redLightPosition.y]}
+        />
+        {board.map((row, i) => {
+          return row.map((tile, j) => {
+            const bg = `${(i + j) % 2 === 0 ? `white` : `black`}`
+            const isSelected =
+              tile.piece && selected?.getId() === tile.piece.getId()
+
+            const canMoveHere = checkIfSelectedPieceCanMoveHere({
+              tile,
+              moves,
+              selected,
+            })
+
+            const tileId = tile.piece?.getId()
+            const pieceIsBeingReplaced =
+              movingTo?.move.piece && tile.piece && movingTo?.move.capture
+                ? tileId === createId(movingTo?.move.capture)
+                : false
+            const rookCastled = movingTo?.move.castling?.rook
+            const isBeingCastled =
+              rookCastled && createId(rookCastled) === tile.piece?.getId()
+
+            const handleClick = (e: ThreeMouseEvent) => {
+              if (movingTo) {
+                return
+              }
+
+              const tileContainsOtherPlayersPiece =
+                tile.piece && tile.piece?.color !== turn
+
+              if (tileContainsOtherPlayersPiece && !canMoveHere && !isDev) {
+                setSelected(null)
+                return
+              }
+
+              canMoveHere
+                ? startMovingPiece(e, tile, canMoveHere)
+                : selectThisPiece(e, tile)
             }
 
-            const tileContainsOtherPlayersPiece =
-              tile.piece && tile.piece?.color !== turn
-
-            if (tileContainsOtherPlayersPiece && !canMoveHere && !isDev) {
-              setSelected(null)
-              return
+            const props: ModelProps = {
+              position: [j, 0.5, i],
+              scale: [0.15, 0.15, 0.15],
+              color: tile.piece?.color || `white`,
+              onClick: handleClick,
+              isSelected: isSelected ? true : false,
+              wasSelected: lastSelected
+                ? lastSelected?.piece?.getId() === tile.piece?.getId()
+                : false,
+              canMoveHere: canMoveHere?.newPosition ?? null,
+              movingTo:
+                checkIfPositionsMatch(
+                  tile.position,
+                  movingTo?.move.piece?.position,
+                ) && movingTo
+                  ? movingTo.move.steps
+                  : isBeingCastled
+                    ? movingTo.move.castling?.rookSteps ?? null
+                    : null,
+              pieceIsBeingReplaced: pieceIsBeingReplaced ? true : false,
+              finishMovingPiece: () =>
+                isBeingCastled ? null : finishMovingPiece(movingTo?.tile ?? null),
             }
 
-            canMoveHere
-              ? startMovingPiece(e, tile, canMoveHere)
-              : selectThisPiece(e, tile)
-          }
+            const pieceId = tile.piece?.getId() ?? `empty-${j}-${i}`
 
-          const props: ModelProps = {
-            position: [j, 0.5, i],
-            scale: [0.15, 0.15, 0.15],
-            color: tile.piece?.color || `white`,
-            onClick: handleClick,
-            isSelected: isSelected ? true : false,
-            wasSelected: lastSelected
-              ? lastSelected?.piece?.getId() === tile.piece?.getId()
-              : false,
-            canMoveHere: canMoveHere?.newPosition ?? null,
-            movingTo:
-              checkIfPositionsMatch(
-                tile.position,
-                movingTo?.move.piece?.position,
-              ) && movingTo
-                ? movingTo.move.steps
-                : isBeingCastled
-                ? movingTo.move.castling?.rookSteps ?? null
-                : null,
-            pieceIsBeingReplaced: pieceIsBeingReplaced ? true : false,
-            finishMovingPiece: () =>
-              isBeingCastled ? null : finishMovingPiece(movingTo?.tile ?? null),
-          }
-
-          const pieceId = tile.piece?.getId() ?? `empty-${j}-${i}`
-
-          return (
-            <group key={`${j}-${i}`}>
-              <TileComponent
-                color={bg}
-                position={[j, 0.25, i]}
-                onClick={handleClick}
-                canMoveHere={canMoveHere?.newPosition ?? null}
-              />
-              <MeshWrapper key={pieceId} {...props}>
-                {tile.piece?.type === `pawn` && <PawnModel />}
-                {tile.piece?.type === `rook` && <RookComponent />}
-                {tile.piece?.type === `knight` && <KnightComponent />}
-                {tile.piece?.type === `bishop` && <BishopComponent />}
-                {tile.piece?.type === `queen` && <QueenComponent />}
-                {tile.piece?.type === `king` && <KingComponent />}
-              </MeshWrapper>
-            </group>
-          )
-        })
-      })}
-    </group>
-  )
-}
+            return (
+              <group key={`${j}-${i}`}>
+                <TileComponent
+                  color={bg}
+                  position={[j, 0.25, i]}
+                  onClick={handleClick}
+                  canMoveHere={canMoveHere?.newPosition ?? null}
+                />
+                <MeshWrapper key={pieceId} {...props}>
+                  {tile.piece?.type === `pawn` && <PawnModel />}
+                  {tile.piece?.type === `rook` && <RookComponent />}
+                  {tile.piece?.type === `knight` && <KnightComponent />}
+                  {tile.piece?.type === `bishop` && <BishopComponent />}
+                  {tile.piece?.type === `queen` && <QueenComponent />}
+                  {tile.piece?.type === `king` && <KingComponent />}
+                </MeshWrapper>
+              </group>
+            )
+          })
+        })}
+      </group>
+    )
+  }

@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid'
-import create from 'zustand'
+import { create } from 'zustand'
 
 import type { Color } from '@/logic/pieces'
 import { isDev } from '@/utils/isDev'

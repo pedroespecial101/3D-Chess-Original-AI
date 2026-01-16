@@ -21,6 +21,7 @@ import { Border } from '@/models/Border'
 import { useGameSettingsState } from '@/state/game'
 import { useHistoryState } from '@/state/history'
 import { usePlayerState } from '@/state/player'
+import { useShallow } from 'zustand/react/shallow'
 import { useSockets } from '@/utils/socket'
 
 export type GameOver = {
@@ -34,13 +35,13 @@ export const Home: FC = () => {
   const [moves, setMoves] = useState<Move[]>([])
   const [gameOver, setGameOver] = useState<GameOver | null>(null)
   const resetHistory = useHistoryState((state) => state.reset)
-  const { resetTurn } = useGameSettingsState((state) => ({
+  const { resetTurn } = useGameSettingsState(useShallow((state) => ({
     resetTurn: state.resetTurn,
     gameStarted: state.gameStarted,
-  }))
-  const { joined } = usePlayerState((state) => ({
+  })))
+  const { joined } = usePlayerState(useShallow((state) => ({
     joined: state.joinedRoom,
-  }))
+  })))
 
   const reset = () => {
     setBoard(createBoard())

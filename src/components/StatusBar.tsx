@@ -4,18 +4,19 @@ import { css } from '@emotion/react'
 
 import { useGameSettingsState } from '@/state/game'
 import { usePlayerState } from '@/state/player'
+import { useShallow } from 'zustand/react/shallow'
 import { uppercaseFirstLetter } from '@/utils/upperCaseFirstLetter'
 
 export const StatusBar: FC = () => {
-  const { room, joinedRoom, playerColor } = usePlayerState((state) => ({
+  const { room, joinedRoom, playerColor } = usePlayerState(useShallow((state) => ({
     room: state.room,
     joinedRoom: state.joinedRoom,
     playerColor: state.playerColor,
-  }))
-  const { gameStarted, turn } = useGameSettingsState((state) => ({
+  })))
+  const { gameStarted, turn } = useGameSettingsState(useShallow((state) => ({
     gameStarted: state.gameStarted,
     turn: state.turn,
-  }))
+  })))
   return (
     <div
       css={css`

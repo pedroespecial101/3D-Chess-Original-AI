@@ -1,12 +1,12 @@
-import create from 'zustand'
+import { create } from 'zustand'
 
 import type { MovingTo } from '@/components/Board'
 import type { Color } from '@/logic/pieces'
 import { oppositeColor } from '@/logic/pieces'
 
 export const useGameSettingsState = create<{
-  gameType: `local` | `online`
-  setGameType: (type: `local` | `online`) => void
+  gameType: `local` | `online` | `local_ai`
+  setGameType: (type: `local` | `online` | `local_ai`) => void
   turn: Color
   setTurn: () => void
   resetTurn: () => void

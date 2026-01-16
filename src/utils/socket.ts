@@ -4,7 +4,8 @@ import { toast } from 'react-toastify'
 import type { Socket } from 'socket.io-client'
 // eslint-disable-next-line import/no-named-as-default
 import io from 'socket.io-client'
-import create from 'zustand'
+import { create } from 'zustand'
+import { useShallow } from 'zustand/react/shallow'
 
 import type { MovingTo } from '@/components/Board'
 import type {
@@ -33,21 +34,21 @@ export const useSocketState = create<{
 }))
 
 export const useSockets = ({ reset }: { reset: VoidFunction }): void => {
-  const [addMessage] = useMessageState((state) => [state.addMessage])
-  const { setGameStarted, setMovingTo } = useGameSettingsState((state) => ({
+  const [addMessage] = useMessageState(useShallow((state) => [state.addMessage]))
+  const { setGameStarted, setMovingTo } = useGameSettingsState(useShallow((state) => ({
     setGameStarted: state.setGameStarted,
     setMovingTo: state.setMovingTo,
-  }))
-  const { setPlayerColor, setJoinedRoom } = usePlayerState((state) => state)
+  })))
+  const { setPlayerColor, setJoinedRoom } = usePlayerState(useShallow((state) => state))
 
-  const { setPosition, setName: setOpponentName } = useOpponentState(
+  const { setPosition, setName: setOpponentName } = useOpponentState(useShallow(
     (state) => state,
-  )
+  ))
 
-  const { socket: socketState, setSocket } = useSocketState((state) => ({
+  const { socket: socketState, setSocket } = useSocketState(useShallow((state) => ({
     socket: state.socket,
     setSocket: state.setSocket,
-  }))
+  })))
   useEffect(() => {
     socketInitializer()
 

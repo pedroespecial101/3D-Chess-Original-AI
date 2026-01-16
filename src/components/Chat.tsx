@@ -6,6 +6,7 @@ import { css } from '@emotion/react'
 import type { Message } from '@/state/player'
 import { useMessageState, usePlayerState } from '@/state/player'
 import { useSocketState } from '@/utils/socket'
+import { useShallow } from 'zustand/react/shallow'
 
 export type MessageClient = {
   room: string
@@ -14,11 +15,11 @@ export type MessageClient = {
 
 export const Chat: FC = () => {
   const [message, setMessage] = useState(``)
-  const [messages] = useMessageState((state) => [state.messages])
-  const { room, username } = usePlayerState((state) => ({
+  const [messages] = useMessageState(useShallow((state) => [state.messages]))
+  const { room, username } = usePlayerState(useShallow((state) => ({
     room: state.room,
     username: state.username,
-  }))
+  })))
   const socket = useSocketState((state) => state.socket)
   const sendMessage = async () => {
     socket?.emit(`createdMessage`, {

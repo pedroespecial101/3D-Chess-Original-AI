@@ -1,10 +1,14 @@
 import type { ChangeEvent, FC } from 'react'
-
+import { useState } from 'react'
 import { css } from '@emotion/react'
 import { toast } from 'react-toastify'
-
 import { usePlayerState } from '@/state/player'
 import { useSocketState } from '@/utils/socket'
+import { AiSettings } from '@/components/AiSettings'
+import { useGameSettingsState } from '@/state/game'
+import { useAiState } from '@/state/ai'
+import { aiClient } from '@/utils/aiClient'
+import { useShallow } from 'zustand/react/shallow'
 
 export type JoinRoomClient = {
   room: string
@@ -20,92 +24,167 @@ const filter = (
   set(filtered)
 }
 
+const tabStyle = (isActive: boolean) => css`
+  padding: 8px 16px;
+  cursor: pointer;
+  border-bottom: 2px solid ${isActive ? '#000' : 'transparent'};
+  font-weight: ${isActive ? 'bold' : 'normal'};
+  opacity: ${isActive ? 1 : 0.6};
+  &:hover {
+    opacity: 1;
+  }
+`
+
 export const GameCreation: FC = () => {
-  const { room, username, joinedRoom, setUsername, setRoom, id } =
-    usePlayerState((state) => state)
-  const { socket } = useSocketState((state) => ({
+  const [mode, setMode] = useState<'online' | 'ai'>('online')
+  const { room, username, joinedRoom, setUsername, setRoom, id, setJoinedRoom } =
+    usePlayerState(useShallow((state) => state))
+  const { socket } = useSocketState(useShallow((state) => ({
     socket: state.socket,
-  }))
+  })))
+  const { setGameType, setGameStarted } = useGameSettingsState(useShallow((state) => ({
+    setGameType: state.setGameType,
+    setGameStarted: state.setGameStarted,
+  })))
+  const { currentConfig } = useAiState(useShallow((state) => state))
+
   const sendRoom = async () => {
     if (!socket) return
     const data: JoinRoomClient = { room, username: `${username}#${id}` }
     socket.emit(`joinRoom`, data)
     socket.emit(`fetchPlayers`, { room })
+    setGameType('online')
   }
+
+  const startAiGame = async () => {
+    try {
+      // Check health
+      const isAlive = await aiClient.health()
+      if (!isAlive) {
+        toast.error('AI Server is not running on localhost:3001')
+        return
+      }
+
+      // Initialize engine
+      await aiClient.init({
+        skillLevel: currentConfig.skillLevel,
+        eloRating: currentConfig.useElo ? currentConfig.eloRating : undefined,
+        threads: currentConfig.threads,
+        hash: currentConfig.hash,
+      })
+
+      setGameType('local_ai')
+      setGameStarted(true)
+      // Manually set joinedRoom to true to hide this modal
+      setJoinedRoom(true)
+    } catch (e) {
+      console.error(e)
+      toast.error('Failed to start AI game')
+    }
+  }
+
   return (
     <>
       {!joinedRoom && (
         <>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              if (username.length < 3 || room.length < 3) {
-                toast.error(`Name or Room is too short.`, {
-                  toastId: `nameOrRoomTooShort`,
-                })
-                return
+          <div
+            css={css`
+              width: ${mode === 'ai' ? '400px' : '300px'};
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              z-index: 100;
+              backdrop-filter: blur(30px);
+              background-color: #ffffff8d;
+              display: flex;
+              flex-direction: column;
+              justify-content: flex-start;
+              align-items: center;
+              border-radius: 10px;
+              padding: 25px 40px;
+              gap: 20px;
+              max-height: 80vh;
+              overflow-y: auto;
+              transition: width 0.3s ease;
+
+              p {
+                font-size: 12px;
+                color: #00000092;
+                padding-top: 10px;
               }
-              sendRoom()
-            }}
-          >
-            <div
-              css={css`
-                width: 300px;
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                z-index: 100;
-                backdrop-filter: blur(30px);
-                background-color: #ffffff8d;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: flex-start;
-                border-radius: 10px;
-                padding: 25px 40px;
-                gap: 20px;
-                p {
-                  font-size: 12px;
-                  color: #00000092;
-                  padding-top: 10px;
-                }
-                div {
-                  width: 100%;
-                }
-                input {
-                  padding-bottom: 10px;
-                  width: 100%;
-                  border-color: #000000;
+              input {
+                padding-bottom: 10px;
+                width: 100%;
+                border-color: #000000;
+                color: #000000;
+                ::placeholder {
                   color: #000000;
-                  ::placeholder {
-                    color: #000000;
-                  }
                 }
-              `}
-            >
-              <input
-                type="text"
-                placeholder="Name"
-                value={username}
-                onChange={(e) => filter(e, setUsername)}
-                minLength={3}
-                maxLength={10}
-              />
-              <div>
+              }
+              button.primary {
+                width: 100%;
+                padding: 10px;
+                background: #000;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-weight: bold;
+                margin-top: 10px;
+                &:hover {
+                  background: #333;
+                }
+              }
+            `}
+          >
+            <div css={css`display: flex; gap: 20px; border-bottom: 1px solid #ccc; width: 100%; margin-bottom: 10px; justify-content: center;`}>
+              <div css={tabStyle(mode === 'online')} onClick={() => setMode('online')}>Online</div>
+              <div css={tabStyle(mode === 'ai')} onClick={() => setMode('ai')}>Play vs AI</div>
+            </div>
+
+            {mode === 'online' ? (
+              <form
+                style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '20px' }}
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  if (username.length < 3 || room.length < 3) {
+                    toast.error(`Name or Room is too short.`, {
+                      toastId: `nameOrRoomTooShort`,
+                    })
+                    return
+                  }
+                  sendRoom()
+                }}
+              >
                 <input
                   type="text"
-                  placeholder="Room"
-                  value={room}
-                  onChange={(e) => filter(e, setRoom)}
+                  placeholder="Name"
+                  value={username}
+                  onChange={(e) => filter(e, setUsername)}
                   minLength={3}
-                  maxLength={16}
+                  maxLength={10}
                 />
-                <p>If no room exists one will be created.</p>
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Room"
+                    value={room}
+                    onChange={(e) => filter(e, setRoom)}
+                    minLength={3}
+                    maxLength={16}
+                  />
+                  <p>If no room exists one will be created.</p>
+                </div>
+                <button type="submit" className="primary">Join Room</button>
+              </form>
+            ) : (
+              <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <AiSettings />
+                <button className="primary" onClick={startAiGame}>Start Game</button>
               </div>
-              <button type="submit">Join Room</button>
-            </div>
-          </form>
+            )}
+          </div>
           <div
             css={css`
               position: absolute;

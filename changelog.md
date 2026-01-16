@@ -3,6 +3,23 @@
 ** Read README.md for AI coding agent focused project overview and documentation. **
 ** Follow the AI coding agent rules in .agent/rules/ **
 
+## [2026-01-16] - Added Debug URL Parameter for Auto-Start
+
+### Added
+- URL parameter `?mode=debug` to auto-start AI game with debug mode enabled
+- Navigate to `http://localhost:3010?mode=debug` to skip startup modal
+- Useful for AI agents needing to start games without UI interaction
+
+### Removed
+- Debug Mode checkbox from startup modal (debug mode now only accessible via URL parameter)
+
+### Changed
+- Updated `GameCreation.tsx` with URL parameter detection on mount
+- Updated `README.md` with URL Parameters section
+- Updated `.agent/rules/project.md` with auto-start instructions
+
+---
+
 ## [2026-01-16] - Fixed Missing Chess Pieces (Knight, Bishop, Queen, King)
 
 ### Fixed

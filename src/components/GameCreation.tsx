@@ -1,5 +1,5 @@
 import type { ChangeEvent, FC } from 'react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { css } from '@emotion/react'
 import { toast } from 'react-toastify'
@@ -39,6 +39,7 @@ const tabStyle = (isActive: boolean) => css`
 
 export const GameCreation: FC = () => {
   const [mode, setMode] = useState<`ai` | `online`>(`online`)
+  const [autoStartAttempted, setAutoStartAttempted] = useState(false)
   const { room, username, joinedRoom, setUsername, setRoom, id, setJoinedRoom } =
     usePlayerState(useShallow((state) => state))
   const { socket } = useSocketState(
@@ -56,7 +57,56 @@ export const GameCreation: FC = () => {
       })),
     )
   const { currentConfig } = useAiState(useShallow((state) => state))
-  const [debugEnabled, setDebugEnabled] = useState(false)
+
+  // Check for URL parameters to auto-start game
+  // URL: ?mode=debug -> Auto-start AI game with debug enabled
+  useEffect(() => {
+    if (autoStartAttempted || joinedRoom) return
+
+    const urlParams = new URLSearchParams(window.location.search)
+    const modeParam = urlParams.get('mode')
+
+    if (modeParam === 'debug') {
+      setAutoStartAttempted(true)
+      console.log('[GameCreation] Auto-starting AI game with debug mode via URL parameter')
+
+      const autoStartAiGame = async () => {
+        try {
+          // Check health
+          const isAlive = await aiClient.health()
+          if (!isAlive) {
+            console.error('[GameCreation] AI Server is not running on 192.168.1.187:3001')
+            toast.error(`AI Server is not running - showing manual start`)
+            return
+          }
+
+          // Initialize engine
+          await aiClient.init({
+            skillLevel: currentConfig.skillLevel,
+            eloRating: currentConfig.useElo ? currentConfig.eloRating : undefined,
+            threads: currentConfig.threads,
+            hash: currentConfig.hash,
+          })
+
+          // Enable debug mode
+          setDevMode(true)
+          setShowDebugSettings(true)
+
+          // Start the game
+          setGameType(`local_ai`)
+          setGameStarted(true)
+          setJoinedRoom(true)
+
+          console.log('[GameCreation] Auto-start complete - AI game with debug mode active')
+        } catch (e) {
+          console.error('[GameCreation] Auto-start failed:', e)
+          toast.error(`Auto-start failed - use manual start`)
+        }
+      }
+
+      autoStartAiGame()
+    }
+  }, [autoStartAttempted, joinedRoom, currentConfig, setDevMode, setShowDebugSettings, setGameType, setGameStarted, setJoinedRoom])
 
   const sendRoom = async () => {
     if (!socket) return
@@ -64,12 +114,6 @@ export const GameCreation: FC = () => {
     socket.emit(`joinRoom`, data)
     socket.emit(`fetchPlayers`, { room })
     setGameType(`online`)
-
-    // Enable dev mode if debug toggle is on
-    if (debugEnabled) {
-      setDevMode(true)
-      setShowDebugSettings(true)
-    }
   }
 
   const startAiGame = async () => {
@@ -93,12 +137,6 @@ export const GameCreation: FC = () => {
       setGameStarted(true)
       // Manually set joinedRoom to true to hide this modal
       setJoinedRoom(true)
-
-      // Enable dev mode if debug toggle is on
-      if (debugEnabled) {
-        setDevMode(true)
-        setShowDebugSettings(true)
-      }
     } catch (e) {
       console.error(e)
       toast.error(`Failed to start AI game`)
@@ -180,30 +218,6 @@ export const GameCreation: FC = () => {
                 Play vs AI
               </div>
             </div>
-
-            {/* Debug Mode Toggle - works for both modes */}
-            <label
-              css={css`
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                width: 100%;
-                cursor: pointer;
-                font-size: 14px;
-                color: #333;
-              `}
-            >
-              <input
-                type="checkbox"
-                checked={debugEnabled}
-                onChange={(e) => setDebugEnabled(e.target.checked)}
-                css={css`
-                  width: auto;
-                  cursor: pointer;
-                `}
-              />
-              Enable Debug Mode
-            </label>
 
             {mode === `online` ? (
               <form

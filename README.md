@@ -16,7 +16,14 @@ A Doctor Who themed 3D chess game built with React Three Fiber and Socket.io. Fe
 | **Play vs AI** | Local AI opponent using UCI engine |
 | **Debug Mode** | Development features for testing |
 
----
+### URL Parameters
+
+| Parameter | Example | Description |
+|-----------|---------|-------------|
+| `mode=debug` | `http://localhost:3010?mode=debug` | Auto-starts AI game with debug panel enabled |
+
+> [!TIP]
+> **For AI Agents**: Use `?mode=debug` to skip the startup UI and go directly into an AI game with debug enabled.
 
 ## 🏗️ Technology Stack
 

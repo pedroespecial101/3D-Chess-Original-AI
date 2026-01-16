@@ -3,6 +3,19 @@
 ** Read README.md for AI coding agent focused project overview and documentation. **
 ** Follow the AI coding agent rules in .agent/rules/ **
 
+## [2026-01-16] - Fixed Restart Button on Game Over Screen
+
+### Fixed
+- Restart button now works in AI mode and local games
+- Previously the button only worked for online multiplayer games (via socket)
+- Now detects game type and uses `triggerBoardReset()` for local_ai and local games
+
+### Changed
+- Updated `GameOverScreen.tsx` to check `gameType` from game state
+- Added `useGameSettingsState` import with `useShallow` for proper state access
+
+---
+
 ## [2026-01-16] - Added Debug URL Parameter for Auto-Start
 
 ### Added

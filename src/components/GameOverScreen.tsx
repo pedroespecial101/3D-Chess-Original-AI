@@ -2,8 +2,10 @@ import type { FC } from 'react'
 
 import { css } from '@emotion/react'
 import { VscDebugRestart } from 'react-icons/vsc'
+import { useShallow } from 'zustand/react/shallow'
 
 import type { GameOver } from '@/pages/index'
+import { useGameSettingsState } from '@/state/game'
 import { usePlayerState } from '@/state/player'
 import { useSocketState } from '@/utils/socket'
 
@@ -12,8 +14,20 @@ export const GameOverScreen: FC<{
 }> = ({ gameOver }) => {
   const socket = useSocketState((state) => state.socket)
   const { room } = usePlayerState((state) => state)
+  const { gameType, triggerBoardReset } = useGameSettingsState(
+    useShallow((state) => ({
+      gameType: state.gameType,
+      triggerBoardReset: state.triggerBoardReset,
+    })),
+  )
   const reset = () => {
-    socket?.emit(`resetGame`, { room })
+    if (gameType === `local_ai` || gameType === `local`) {
+      // For AI and local games, trigger board reset directly
+      triggerBoardReset()
+    } else {
+      // For online games, use socket to reset
+      socket?.emit(`resetGame`, { room })
+    }
   }
   return (
     <>

@@ -8,6 +8,14 @@ export type EngineConfig = {
   hash: number
 }
 
+export const DEBUG = true
+
+const log = (...args: any[]) => {
+  if (DEBUG) {
+    console.log('[AI Client]', ...args)
+  }
+}
+
 export type MoveResponse = {
   bestmove: string
   ponder?: string
@@ -53,26 +61,33 @@ class ChessEngineClient {
   }
 
   async getMove(
-    position: string,
+    position: string | null,
     options: {
       depth?: number
       movetime?: number
       skillLevel?: number
       eloRating?: number
+      moves?: string[]
     } = {},
   ): Promise<MoveResponse> {
+    if (DEBUG) log('Getting move for position', position, 'options', options)
+    const body: any = {
+      depth: options.depth || 15,
+      movetime: options.movetime || 2000,
+      skillLevel: options.skillLevel,
+      eloRating: options.eloRating,
+    }
+    if (position) body.position = position
+    if (options.moves) body.moves = options.moves
+
     const response = await fetch(`${this.baseUrl}/api/engine/move`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        position,
-        depth: options.depth || 15,
-        movetime: options.movetime || 2000,
-        skillLevel: options.skillLevel,
-        eloRating: options.eloRating,
-      }),
+      body: JSON.stringify(body),
     })
-    return await response.json()
+    const data = await response.json()
+    if (DEBUG) log('Engine response', data)
+    return data
   }
 
   async quit(): Promise<void> {

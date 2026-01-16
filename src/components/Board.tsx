@@ -38,7 +38,7 @@ import { usePlayerState } from '@/state/player'
 import { isDev } from '@/utils/isDev'
 import { useSocketState } from '@/utils/socket'
 import { useAiState } from '@/state/ai'
-import { aiClient } from '@/utils/aiClient'
+import { aiClient, DEBUG } from '@/utils/aiClient'
 import { fromChessNotation, historyToUciMoves } from '@/utils/chess'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -100,13 +100,15 @@ export const BoardComponent: FC<{
 
     // AI Turn Logic
     useEffect(() => {
-      if (gameType !== 'local_ai' || turn !== 'black' || !gameStarted) return
+      if (gameType !== 'local_ai' || turn === playerColor || !gameStarted) return
       const gameOverType = detectGameOver(board, turn)
       if (gameOverType) return
 
       const makeAiMove = async () => {
         try {
           const uciMoves = historyToUciMoves(history)
+          if (DEBUG) console.log('AI Turn. History:', uciMoves)
+
           const res = await aiClient.getMove(null, {
             moves: uciMoves,
             skillLevel: currentConfig.skillLevel,
@@ -114,6 +116,8 @@ export const BoardComponent: FC<{
             movetime: currentConfig.movetime,
             eloRating: currentConfig.useElo ? currentConfig.eloRating : undefined,
           })
+
+          if (DEBUG) console.log('AI decided move:', res)
 
           if (res.bestmove) {
             const { from, to } = fromChessNotation(res.bestmove)
@@ -139,7 +143,7 @@ export const BoardComponent: FC<{
         }
       }
       makeAiMove()
-    }, [turn, gameType, gameStarted, board, history, currentConfig])
+    }, [turn, gameType, gameStarted, board, history, currentConfig, playerColor])
 
 
     const selectThisPiece = (e: ThreeMouseEvent, tile: Tile | null) => {

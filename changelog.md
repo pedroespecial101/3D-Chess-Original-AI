@@ -3,6 +3,18 @@
 
 ## [Unreleased]
 
+### Changed
+- Split `.agent/rules.md` into granular rule files in `.agent/rules/`: `documentation.md`, `ai_integration.md`, `architecture.md`, and `debugging.md`.
+
+### Added
+- Created `.agent/rules.md` to enforce documentation standards and AI integration patterns (moved from `.cursorrules`).
+- Added project-specific rules regarding the external UCI AI engine interface.
+- Added DEBUG logging to `aiClient` and `Board` component to track AI decision making.
+- Added `DEBUG` flag in `aiClient.ts`.
+
+### Fixed
+- Fixed AI playing as White (human side) by ensuring move history is sent to the chess engine.
+
 ### Added
 - Added AI Opponent integration using local UCI server.
 - Added `ChessEngineClient` util in `src/utils/aiClient.ts` to communicate with Stockfish API.

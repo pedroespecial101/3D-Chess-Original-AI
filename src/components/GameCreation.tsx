@@ -6,10 +6,10 @@ import { toast } from 'react-toastify'
 import { useShallow } from 'zustand/react/shallow'
 
 import { AiSettings } from '@/components/AiSettings'
+import { useAiGameStart } from '@/hooks/useAiGameStart'
 import { useAiState } from '@/state/ai'
 import { useGameSettingsState } from '@/state/game'
 import { usePlayerState } from '@/state/player'
-import { aiClient } from '@/utils/aiClient'
 import { useSocketState } from '@/utils/socket'
 
 export type JoinRoomClient = {
@@ -47,16 +47,17 @@ export const GameCreation: FC = () => {
       socket: state.socket,
     })),
   )
-  const { setGameType, setGameStarted, setDevMode, setShowDebugSettings } =
-    useGameSettingsState(
-      useShallow((state) => ({
-        setGameType: state.setGameType,
-        setGameStarted: state.setGameStarted,
-        setDevMode: state.setDevMode,
-        setShowDebugSettings: state.setShowDebugSettings,
-      })),
-    )
+  const setGameType = useGameSettingsState((state) => state.setGameType)
   const { currentConfig } = useAiState(useShallow((state) => state))
+
+  // Hook for AI game initialization (consolidates auto-start and manual start logic)
+  const { startAiGame: startAiGameWithDebug } = useAiGameStart({
+    config: currentConfig,
+    enableDebugMode: true,
+  })
+  const { startAiGame } = useAiGameStart({
+    config: currentConfig,
+  })
 
   // Check for URL parameters to auto-start game
   // URL: ?mode=debug -> Auto-start AI game with debug enabled
@@ -69,44 +70,9 @@ export const GameCreation: FC = () => {
     if (modeParam === 'debug') {
       setAutoStartAttempted(true)
       console.log('[GameCreation] Auto-starting AI game with debug mode via URL parameter')
-
-      const autoStartAiGame = async () => {
-        try {
-          // Check health
-          const isAlive = await aiClient.health()
-          if (!isAlive) {
-            console.error(`[GameCreation] AI Server is not running on ${process.env.NEXT_PUBLIC_AI_SERVER_URL}`)
-            toast.error(`AI Server is not running - showing manual start`)
-            return
-          }
-
-          // Initialize engine
-          await aiClient.init({
-            skillLevel: currentConfig.skillLevel,
-            eloRating: currentConfig.useElo ? currentConfig.eloRating : undefined,
-            threads: currentConfig.threads,
-            hash: currentConfig.hash,
-          })
-
-          // Enable debug mode
-          setDevMode(true)
-          setShowDebugSettings(true)
-
-          // Start the game
-          setGameType(`local_ai`)
-          setGameStarted(true)
-          setJoinedRoom(true)
-
-          console.log('[GameCreation] Auto-start complete - AI game with debug mode active')
-        } catch (e) {
-          console.error('[GameCreation] Auto-start failed:', e)
-          toast.error(`Auto-start failed - use manual start`)
-        }
-      }
-
-      autoStartAiGame()
+      startAiGameWithDebug()
     }
-  }, [autoStartAttempted, joinedRoom, currentConfig, setDevMode, setShowDebugSettings, setGameType, setGameStarted, setJoinedRoom])
+  }, [autoStartAttempted, joinedRoom, startAiGameWithDebug])
 
   const sendRoom = async () => {
     if (!socket) return
@@ -114,33 +80,6 @@ export const GameCreation: FC = () => {
     socket.emit(`joinRoom`, data)
     socket.emit(`fetchPlayers`, { room })
     setGameType(`online`)
-  }
-
-  const startAiGame = async () => {
-    try {
-      // Check health
-      const isAlive = await aiClient.health()
-      if (!isAlive) {
-        toast.error(`AI Server is not running on ${process.env.NEXT_PUBLIC_AI_SERVER_URL}`)
-        return
-      }
-
-      // Initialize engine
-      await aiClient.init({
-        skillLevel: currentConfig.skillLevel,
-        eloRating: currentConfig.useElo ? currentConfig.eloRating : undefined,
-        threads: currentConfig.threads,
-        hash: currentConfig.hash,
-      })
-
-      setGameType(`local_ai`)
-      setGameStarted(true)
-      // Manually set joinedRoom to true to hide this modal
-      setJoinedRoom(true)
-    } catch (e) {
-      console.error(e)
-      toast.error(`Failed to start AI game`)
-    }
   }
 
   return (

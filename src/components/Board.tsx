@@ -14,13 +14,10 @@ import {
   movesForPiece,
 } from '@logic/pieces'
 import { isPawn } from '@logic/pieces/pawn'
-import { BishopModel } from '@models/Bishop'
+import { BishopModel, KingModel, KnightModel, QueenModel } from '@models/SimpleGLTFModel'
 import type { ModelProps } from '@models/index'
 import { MeshWrapper } from '@models/index'
-import { KingModel } from '@models/King'
-import { KnightModel } from '@models/Knight'
 import { PawnModel } from '@models/Pawn'
-import { QueenModel } from '@models/Queen'
 import { RookComponent } from '@models/Rook'
 import { TileComponent } from '@models/Tile'
 import { useSpring, animated } from '@react-spring/three'
@@ -31,6 +28,12 @@ import { useShallow } from 'zustand/react/shallow'
 
 import { isKing } from '@/logic/pieces/king'
 import { isRook } from '@/logic/pieces/rook'
+import { BOARD_CENTER } from '@/constants/board'
+import {
+  DEFAULT_CAMERA_POSITION,
+  ISOLATED_PIECE_CAMERA_POSITION,
+  ISOLATED_PIECE_CAMERA_TARGET,
+} from '@/constants/camera'
 import type { GameOver } from '@/pages/index'
 import type { CameraMove } from '@/server/cameraMove'
 import { useAiState } from '@/state/ai'
@@ -344,7 +347,7 @@ export const BoardComponent: FC<{
     // Camera reset from debug panel
     useEffect(() => {
       if (cameraResetCounter > 0) {
-        camera.position.set(-12, 5, 6)
+        camera.position.set(...DEFAULT_CAMERA_POSITION)
         if (controlsRef.current) {
           controlsRef.current.target.set(0, 0, 0)
           controlsRef.current.update()
@@ -355,8 +358,8 @@ export const BoardComponent: FC<{
     // Focus camera on isolated piece
     useEffect(() => {
       if (isolatedPiece && controlsRef.current) {
-        camera.position.set(-6, 4, 4)
-        controlsRef.current.target.set(3.5, 0, 3.5)
+        camera.position.set(...ISOLATED_PIECE_CAMERA_POSITION)
+        controlsRef.current.target.set(...ISOLATED_PIECE_CAMERA_TARGET)
         controlsRef.current.update()
         if (verboseLogging) {
           console.log(

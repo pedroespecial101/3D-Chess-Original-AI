@@ -3,6 +3,25 @@
 ** Read README.md for AI coding agent focused project overview and documentation. **
 ** Follow the AI coding agent rules in .agent/rules/ **
 
+## [2026-01-16] - Post-Merge Refactoring (Medium Effort)
+
+### Added
+- **`SimpleGLTFModel.tsx`**: Factory component that generates GLTF model components, reducing 4 separate files (~160 lines) to 1 (~95 lines).
+- **`useAiGameStart.ts`**: Custom hook consolidating AI game initialization logic from `GameCreation.tsx`.
+- **`src/styles/shared.ts`**: Shared Emotion CSS styles extracted from `DebugSettings.tsx`.
+- **`src/constants/camera.ts`**: Camera position/zoom constants (e.g., `DEFAULT_CAMERA_POSITION`, `ISOLATED_PIECE_CAMERA_TARGET`).
+- **`src/constants/board.ts`**: Board dimension constants (e.g., `BOARD_CENTER`, `FRAMER_MULTIPLIER`).
+
+### Changed
+- `Board.tsx` now imports from `SimpleGLTFModel.tsx` and uses constants for camera positions.
+- `GameCreation.tsx` uses `useAiGameStart` hook instead of duplicated inline async functions.
+- `DebugSettings.tsx` imports styles from `@/styles/shared`.
+
+### Removed
+- Deleted `src/models/Knight.tsx`, `Bishop.tsx`, `Queen.tsx`, `King.tsx` (replaced by factory).
+
+---
+
 ## [2026-01-16] - Post-Merge Refactoring (Quick Wins)
 
 ### Refactored

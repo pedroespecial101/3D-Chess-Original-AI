@@ -34,7 +34,6 @@ export const KnightModel: FC<ModelProps> = (props) => {
   )
 }
 
-// Legacy component for backward compatibility
-export const KnightComponent: FC = () => null
+
 
 useGLTF.preload(`/knight.gltf`)

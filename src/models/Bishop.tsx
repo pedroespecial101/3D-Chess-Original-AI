@@ -34,7 +34,6 @@ export const BishopModel: FC<ModelProps> = (props) => {
   )
 }
 
-// Legacy component for backward compatibility
-export const BishopComponent: FC = () => null
+
 
 useGLTF.preload(`/bishop.gltf`)

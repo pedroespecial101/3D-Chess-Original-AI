@@ -1,11 +1,5 @@
-export type EngineConfig = {
-  skillLevel: number
-  eloRating?: number
-  depth: number
-  movetime: number
-  threads: number
-  hash: number
-}
+import type { EngineConfig } from '@/state/ai'
+export type { EngineConfig }
 
 export const DEBUG = true
 
@@ -31,7 +25,7 @@ export type MoveResponse = {
 class ChessEngineClient {
   private baseUrl: string
 
-  public constructor(baseUrl = `http://192.168.1.187:3001`) {
+  public constructor(baseUrl = process.env.NEXT_PUBLIC_AI_SERVER_URL || `http://192.168.1.187:3001`) {
     this.baseUrl = baseUrl
   }
 

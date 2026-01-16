@@ -3,6 +3,17 @@
 ** Read README.md for AI coding agent focused project overview and documentation. **
 ** Follow the AI coding agent rules in .agent/rules/ **
 
+## [2026-01-16] - Post-Merge Refactoring (Quick Wins)
+
+### Refactored
+- Cleaned up 4 Codebase Quality issues identified in post-merge analysis:
+  - **Removed Orphan File**: Deleted `K-9_Model.jsx` from project root (duplicate).
+  - **Removed Dead Code**: Deleted legacy unused `Component` exports from Knight, Bishop, Queen, and King models.
+  - **Consolidated Types**: Removed duplicate `EngineConfig` definition in `aiClient.ts` (now imports from `@/state/ai`).
+  - **Environment Configuration**: Extracted hardcoded AI Server URL (`192.168.1.187:3001`) to `.env.local` using `NEXT_PUBLIC_AI_SERVER_URL`.
+
+---
+
 ## [2026-01-16] - Fixed Restart Button on Game Over Screen
 
 ### Fixed

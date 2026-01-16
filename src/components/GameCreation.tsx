@@ -75,7 +75,7 @@ export const GameCreation: FC = () => {
           // Check health
           const isAlive = await aiClient.health()
           if (!isAlive) {
-            console.error('[GameCreation] AI Server is not running on 192.168.1.187:3001')
+            console.error(`[GameCreation] AI Server is not running on ${process.env.NEXT_PUBLIC_AI_SERVER_URL}`)
             toast.error(`AI Server is not running - showing manual start`)
             return
           }
@@ -121,7 +121,7 @@ export const GameCreation: FC = () => {
       // Check health
       const isAlive = await aiClient.health()
       if (!isAlive) {
-        toast.error(`AI Server is not running on 192.168.1.187:3001`)
+        toast.error(`AI Server is not running on ${process.env.NEXT_PUBLIC_AI_SERVER_URL}`)
         return
       }
 

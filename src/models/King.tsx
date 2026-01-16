@@ -34,7 +34,6 @@ export const KingModel: FC<ModelProps> = (props) => {
   )
 }
 
-// Legacy component for backward compatibility
-export const KingComponent: FC = () => null
+
 
 useGLTF.preload(`/king.gltf`)

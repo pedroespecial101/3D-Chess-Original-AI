@@ -34,7 +34,6 @@ export const QueenModel: FC<ModelProps> = (props) => {
   )
 }
 
-// Legacy component for backward compatibility
-export const QueenComponent: FC = () => null
+
 
 useGLTF.preload(`/queen.gltf`)

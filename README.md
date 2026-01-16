@@ -1,97 +1,227 @@
-# 3D Chess Application
+# 🎯 Doctor Who 3D Chess
 
-This `README.md` is designed to provide a comprehensive overview of the project's architecture, features, and integration details for future AI agents and developers.
+A Doctor Who themed 3D chess game built with React Three Fiber and Socket.io. Features iconic characters from the Doctor Who universe as chess pieces - the Doctor's allies as white pieces and classic villains as black pieces.
 
-## 1. Project Overview
+**This README is designed for AI coding agents to understand the codebase.**
 
-This is a modern 3D Chess application built with React, Next.js, and React Three Fiber (R3F). It supports both **Online Multiplayer** (via Socket.io) and **Local AI** gameplay (via a custom UCI-compatible server interface).
-
-The project aims to provide a premium visual experience with 3D models while maintaining robust chess logic and adhering to standard chess protocols for AI integration.
-
-## 2. Technology Stack
-
-*   **Framework**: [Next.js](https://nextjs.org/) (React)
-*   **3D Rendering**: [React Three Fiber](https://docs.pmnd.rs/react-three-fiber) & [Drei](https://github.com/pmndrs/drei)
-*   **State Management**: [Zustand](https://zustand-demo.pmnd.rs/)
-*   **Styling**: Vanilla CSS / Emotion (minimal)
-*   **Real-time Communication**: [Socket.io Client](https://socket.io/)
-*   **Backend Interface**: Custom `aiClient` communicating with a local Express/Stockfish server.
-
-## 3. Project Structure
-
-### `src/components`
-UI and 3D components.
-*   `Board.tsx`: The core game component. Handles rendering the 3D board, piece movement animations, and game loop integration (including AI turns).
-*   `GameCreation.tsx`: UI for setting up new games (Online vs AI).
-*   `StatusBar.tsx`: Displays current turn, game status, and opponent info.
-*   `models/`: Contains 3D GLTF/GLB models for chess pieces (King, Queen, Pawn, etc.).
-
-### `src/logic`
-Pure TypeScript game logic (Framework agnostic).
-*   `board.ts`: Board representation (8x8 grid of Tiles), initialization, and utility functions.
-*   `pieces/`: Individual logic for each piece type (movement rules, validation).
-    *   `index.ts`: Central export, `movesForPiece`, `check/checkmate` detection.
-    *   `pawn.ts`, `king.ts`, etc.: Specific move generation.
-
-### `src/state`
-Global state management using Zustand.
-*   `game.ts`: Game settings (`gameType`, `turn`, game started state).
-*   `ai.ts`: AI specific settings (Skill Level, Difficulty Presets, Engine configuration).
-*   `history.ts`: Logs moves for history display and AI synchronization.
-*   `player.ts`: User identity and room state for multiplayer.
-
-### `src/utils`
-Helper functions.
-*   `aiClient.ts`: **CRITICAL**. The interface for communicating with the external chess engine server. Handles `init`, `move`, and `quit` commands.
-*   `chess.ts`: Helpers for converting between internal board coordinates and UCI notation (e.g., `e2e4`).
-*   `socket.ts`: Socket.io connection setup.
-
-## 4. Key Features & Implementation Details
-
-### Game Modes
-1.  **Online**: Players create a room and play against a human opponent via WebSockets.
-2.  **Local AI**: Player plays against a Stockfish engine running on a local server.
-    *   The `Board.tsx` component `useEffect` detects when it is the AI's turn.
-    *   It sends the full move history to the engine via `aiClient`.
-    *   Returns a move in UCI notation, which is converted to an internal move object and executed.
-
-### AI Integration (Skill Level Interface Pattern - SLIP)
-The AI system is designed with a "Skill Level Interface Pattern".
--   **Configuration**: managed in `src/state/ai.ts`.
--   **Presets**: `learner`, `beginner`, `club`, `expert`, `master`.
--   **Communication**: The app expects a local server running at `http://192.168.1.187:3001` (default).
--   **Debug**: Enable `DEBUG` in `src/utils/aiClient.ts` to see detailed logs of engine communication in the browser console.
-
-**See `documents/AI_API_Integration_Guide.md` for full API details.**
-
-### 3D Move Handling
-*   Pieces are independent 3D meshes.
-*   Movement is animated using `react-spring` (implied by `animated.pointLight` usage and general R3F patterns).
-*   State updates happen *after* visual confirmation or are synchronized.
-
-## 5. Development Workflow
-
-### Running the App
-```bash
-npm run dev
-# Runs on localhost:3000
-```
-
-### Running the AI Backend
-This project **requires** the separate AI Server project to be running for 'Play vs AI' to work.
-*   Ensure the external Chess Engine Server is running on port `3001`.
-*   Endpoint checks: `GET http://192.168.1.187:3001/health`.
-
-### Common Tasks for AI Agents
-*   **Adding a new piece**: Add model to `src/models`, logic to `src/logic/pieces`, and update `src/logic/pieces/index.ts`.
-*   **Modifying AI Logic**: Check `src/components/Board.tsx` (turn handling) and `src/utils/aiClient.ts` (API payload).
-*   **Styling**: Most 3D styling is in `Board.tsx` (lights, controls) and individual model components. UI styling is in component-specific CSS/TSX.
-
-## 6. Troubleshooting
-
-*   **AI moves same piece as player**: Typically happens if the move history isn't sent correctly to the engine, causing it to think it's the opening move for White. (Fixed in recent updates).
-*   **Connection Refused**: Check if the local AI server is running.
-*   **Illegal Moves**: `src/logic` handles validation. If AI returns an illegal move, it logs a warning in the console.
+![Imgur](https://i.imgur.com/r9tBfim.png)
 
 ---
-*Generated for AI Context - January 2026*
+
+## 📋 Quick Reference
+
+| Mode | Description |
+|------|-------------|
+| **Online** | Multiplayer via Socket.io rooms |
+| **Play vs AI** | Local AI opponent using UCI engine |
+| **Debug Mode** | Development features for testing |
+
+---
+
+## 🏗️ Technology Stack
+
+| Technology | Purpose |
+|------------|---------|
+| **Next.js** | React framework |
+| **React Three Fiber** | React renderer for Three.js |
+| **@react-three/drei** | R3F helpers (OrbitControls, useGLTF) |
+| **React Spring** | Physics-based animations |
+| **Socket.io** | Real-time multiplayer |
+| **Zustand** | State management |
+| **Emotion** | CSS-in-JS styling |
+
+---
+
+## 📁 Project Structure
+
+```
+src/
+├── components/           # React UI components
+│   ├── Board.tsx         # Core 3D game component (AI turns, debug features)
+│   ├── GameCreation.tsx  # Game setup UI (Online/AI tabs, Debug toggle)
+│   ├── DebugSettings.tsx # Runtime debug panel
+│   ├── AiSettings.tsx    # AI difficulty configuration
+│   └── ...
+├── logic/                # Pure chess logic (framework agnostic)
+│   ├── board.ts          # Board representation, tile utilities
+│   └── pieces/           # Move generation per piece type
+├── models/               # 3D piece components
+│   ├── index.tsx         # MeshWrapper, PieceMaterial (shared utilities)
+│   ├── Pawn.tsx          # K-9 (white) / Dalek (black)
+│   ├── Rook.tsx          # TARDIS (white) / Cyberman (black)
+│   ├── K9.tsx, Dalek.tsx, Tardis.tsx, Cyberman.tsx
+│   └── ...
+├── state/                # Zustand stores
+│   ├── game.ts           # Turn, gameType, debug settings
+│   ├── ai.ts             # AI config and difficulty presets
+│   ├── history.ts        # Move history
+│   └── player.ts         # User identity, room info
+├── utils/
+│   ├── aiClient.ts       # UCI engine API client
+│   ├── chess.ts          # UCI notation converters
+│   └── socket.ts         # Socket.io setup
+└── pages/
+    └── index.tsx         # Main game page
+
+public/
+├── k9.glb, dalek.glb, tardis.glb, cyberman.glb  # 3D models
+└── ...
+```
+
+---
+
+## 🎮 Game Modes
+
+### Online Multiplayer
+- Players join rooms via Socket.io
+- Real-time move synchronization
+- Camera position sharing between players
+
+### Play vs AI
+- Uses external UCI-compatible chess engine
+- **Server**: `http://192.168.1.187:3001` (configurable in `aiClient.ts`)
+- Engine configured via SLIP (Skill Level Interface Pattern)
+- Presets: Learner, Beginner, Club, Expert, Grandmaster
+
+### Debug Mode
+- Toggle on game creation screen
+- Features: piece isolation, camera controls, verbose logging
+- Dev mode overrides only work in PVP, not AI games
+
+---
+
+## 🧠 AI Integration
+
+### Architecture
+```
+Browser (Board.tsx) → aiClient.ts → UCI Server (192.168.1.187:3001) → Stockfish
+```
+
+### Key Files
+- `src/utils/aiClient.ts` - HTTP client for engine communication
+- `src/state/ai.ts` - Difficulty presets and config storage
+- `src/utils/chess.ts` - UCI notation conversion (`e2e4` format)
+- `src/components/Board.tsx` - AI turn detection (lines 117-153)
+
+### API Endpoints
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| GET | `/health` | Server status check |
+| POST | `/api/engine/init` | Initialize engine with config |
+| POST | `/api/engine/move` | Get best move for position |
+| DELETE | `/api/engine/quit` | Shutdown engine |
+
+### AI Turn Flow
+1. `Board.tsx` detects `gameType === 'local_ai'` and `turn !== playerColor`
+2. Converts move history to UCI format via `historyToUciMoves()`
+3. Calls `aiClient.getMove()` with history and config
+4. Parses returned move (`e2e4`) to internal format
+5. Executes move via `setMovingTo()`
+
+---
+
+## 🔧 Key Components
+
+### Board.tsx
+- Renders 3D board and all pieces
+- Handles both online and AI game loops
+- Camera controls (OrbitControls with debug zoom/pan)
+- Piece selection, move validation, animation triggers
+
+### MeshWrapper (src/models/index.tsx)
+- Wraps all chess pieces
+- Applies 0.03 scale (custom models need 100-200x compensation)
+- Handles selection states, movement animation
+- `isFullModel` prop for GLB-based pieces
+
+### PieceMaterial
+- Shared material with texture mode support
+- Three modes: `metallic`, `original`, `hybrid`
+- Selection highlighting (color change on select)
+
+---
+
+## 🎭 Doctor Who Pieces
+
+| Piece | White (Allies) | Black (Enemies) | Status |
+|-------|----------------|-----------------|--------|
+| Pawns | K-9 (Robot Dog) | Daleks | ✅ Done |
+| Rooks | TARDIS | Cybermen | ✅ Done |
+| Knights | TBD | TBD | ⏳ Pending |
+| Bishops | TBD | TBD | ⏳ Pending |
+| Queen | TBD | TBD | ⏳ Pending |
+| King | TBD | TBD | ⏳ Pending |
+
+---
+
+## 🚀 Getting Started
+
+```bash
+# Install dependencies
+npm install --legacy-peer-deps
+
+# Start dev server (default port 3000)
+npm run dev
+
+# Or specify port
+npm run dev -- -p 3010
+```
+
+### For AI Mode
+The external UCI chess server must be running on `192.168.1.187:3001`.
+
+---
+
+## 🛠️ Adding New 3D Pieces
+
+1. **Convert GLB to React component:**
+   ```bash
+   npx gltfjsx@latest model.glb --transform --output src/models/NewPiece.tsx
+   ```
+
+2. **Copy optimized model to public:**
+   ```bash
+   cp model-transformed.glb public/newpiece.glb
+   ```
+
+3. **Update component:**
+   - Import `PieceMaterial`, `ModelProps` from `./index`
+   - Replace materials with `<PieceMaterial {...materialProps} />`
+   - Add `scale={180}` to compensate for MeshWrapper
+   - Add rotation for white pieces: `rotation={[0, Math.PI, 0]}`
+
+4. **Wire into piece component:**
+   ```tsx
+   <MeshWrapper {...props} isFullModel>
+     <NewPieceModel {...props} />
+   </MeshWrapper>
+   ```
+
+---
+
+## 🐛 Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| AI not responding | Check server at `192.168.1.187:3001/health` |
+| AI plays wrong color | Ensure move history is being sent |
+| Model invisible | Increase `scale` value (try 150-200) |
+| Debug mode not working | Check "Enable Debug Mode" on game creation |
+
+---
+
+## 📜 Agent Rules
+
+See `.agent/rules/` for coding guidelines:
+- `documentation.md` - Changelog and README requirements
+- `ai_integration.md` - AI opponent interaction rules
+- `architecture.md` - Code structure conventions
+- `debugging.md` - Debug logging requirements
+
+---
+
+## 📝 Credits
+
+- Original 3D Chess project
+- 3D Models from [Sketchfab](https://sketchfab.com/)
+- Doctor Who is a trademark of the BBC

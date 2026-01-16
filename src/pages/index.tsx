@@ -7,9 +7,11 @@ import { createBoard } from '@logic/board'
 import type { Color, GameOverType, Move, Piece } from '@logic/pieces'
 import { Environment, useProgress } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
+import { useShallow } from 'zustand/react/shallow'
 
 import { BoardComponent } from '@/components/Board'
 import { Chat } from '@/components/Chat'
+import { DebugSettings } from '@/components/DebugSettings'
 import { GameCreation } from '@/components/GameCreation'
 import { GameOverScreen } from '@/components/GameOverScreen'
 import { Loader } from '@/components/Loader'
@@ -21,7 +23,6 @@ import { Border } from '@/models/Border'
 import { useGameSettingsState } from '@/state/game'
 import { useHistoryState } from '@/state/history'
 import { usePlayerState } from '@/state/player'
-import { useShallow } from 'zustand/react/shallow'
 import { useSockets } from '@/utils/socket'
 
 export type GameOver = {
@@ -35,13 +36,25 @@ export const Home: FC = () => {
   const [moves, setMoves] = useState<Move[]>([])
   const [gameOver, setGameOver] = useState<GameOver | null>(null)
   const resetHistory = useHistoryState((state) => state.reset)
-  const { resetTurn } = useGameSettingsState(useShallow((state) => ({
-    resetTurn: state.resetTurn,
-    gameStarted: state.gameStarted,
-  })))
-  const { joined } = usePlayerState(useShallow((state) => ({
-    joined: state.joinedRoom,
-  })))
+  const {
+    resetTurn,
+    boardResetCounter,
+    showDebugSettings,
+    setShowDebugSettings,
+  } = useGameSettingsState(
+    useShallow((state) => ({
+      resetTurn: state.resetTurn,
+      gameStarted: state.gameStarted,
+      boardResetCounter: state.boardResetCounter,
+      showDebugSettings: state.showDebugSettings,
+      setShowDebugSettings: state.setShowDebugSettings,
+    })),
+  )
+  const { joined } = usePlayerState(
+    useShallow((state) => ({
+      joined: state.joinedRoom,
+    })),
+  )
 
   const reset = () => {
     setBoard(createBoard())
@@ -53,6 +66,13 @@ export const Home: FC = () => {
   }
 
   useSockets({ reset })
+
+  // Handle board reset from debug panel
+  useEffect(() => {
+    if (boardResetCounter > 0) {
+      reset()
+    }
+  }, [boardResetCounter])
 
   const [total, setTotal] = useState(0)
   const { progress } = useProgress()
@@ -77,6 +97,32 @@ export const Home: FC = () => {
       <Sidebar board={board} moves={moves} selected={selected} />
       {joined && <Chat />}
       <StatusBar />
+      <DebugSettings />
+      <button
+        onClick={() => setShowDebugSettings(!showDebugSettings)}
+        css={css`
+          position: fixed;
+          bottom: 20px;
+          right: 20px;
+          background: rgba(0, 0, 0, 0.6);
+          backdrop-filter: blur(5px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          color: white;
+          padding: 8px 16px;
+          border-radius: 20px;
+          cursor: pointer;
+          font-size: 0.8rem;
+          font-weight: 500;
+          transition: all 0.2s;
+          z-index: 100;
+          &:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.4);
+          }
+        `}
+      >
+        Debug
+      </button>
       <GameOverScreen gameOver={gameOver} />
       <Toast />
       <Canvas shadows camera={{ position: [-12, 5, 6], fov: 50 }}>

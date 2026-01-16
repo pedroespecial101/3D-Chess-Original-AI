@@ -1,14 +1,16 @@
 import type { ChangeEvent, FC } from 'react'
 import { useState } from 'react'
+
 import { css } from '@emotion/react'
 import { toast } from 'react-toastify'
-import { usePlayerState } from '@/state/player'
-import { useSocketState } from '@/utils/socket'
-import { AiSettings } from '@/components/AiSettings'
-import { useGameSettingsState } from '@/state/game'
-import { useAiState } from '@/state/ai'
-import { aiClient } from '@/utils/aiClient'
 import { useShallow } from 'zustand/react/shallow'
+
+import { AiSettings } from '@/components/AiSettings'
+import { useAiState } from '@/state/ai'
+import { useGameSettingsState } from '@/state/game'
+import { usePlayerState } from '@/state/player'
+import { aiClient } from '@/utils/aiClient'
+import { useSocketState } from '@/utils/socket'
 
 export type JoinRoomClient = {
   room: string
@@ -27,8 +29,8 @@ const filter = (
 const tabStyle = (isActive: boolean) => css`
   padding: 8px 16px;
   cursor: pointer;
-  border-bottom: 2px solid ${isActive ? '#000' : 'transparent'};
-  font-weight: ${isActive ? 'bold' : 'normal'};
+  border-bottom: 2px solid ${isActive ? `#000` : `transparent`};
+  font-weight: ${isActive ? `bold` : `normal`};
   opacity: ${isActive ? 1 : 0.6};
   &:hover {
     opacity: 1;
@@ -36,24 +38,38 @@ const tabStyle = (isActive: boolean) => css`
 `
 
 export const GameCreation: FC = () => {
-  const [mode, setMode] = useState<'online' | 'ai'>('online')
+  const [mode, setMode] = useState<`ai` | `online`>(`online`)
   const { room, username, joinedRoom, setUsername, setRoom, id, setJoinedRoom } =
     usePlayerState(useShallow((state) => state))
-  const { socket } = useSocketState(useShallow((state) => ({
-    socket: state.socket,
-  })))
-  const { setGameType, setGameStarted } = useGameSettingsState(useShallow((state) => ({
-    setGameType: state.setGameType,
-    setGameStarted: state.setGameStarted,
-  })))
+  const { socket } = useSocketState(
+    useShallow((state) => ({
+      socket: state.socket,
+    })),
+  )
+  const { setGameType, setGameStarted, setDevMode, setShowDebugSettings } =
+    useGameSettingsState(
+      useShallow((state) => ({
+        setGameType: state.setGameType,
+        setGameStarted: state.setGameStarted,
+        setDevMode: state.setDevMode,
+        setShowDebugSettings: state.setShowDebugSettings,
+      })),
+    )
   const { currentConfig } = useAiState(useShallow((state) => state))
+  const [debugEnabled, setDebugEnabled] = useState(false)
 
   const sendRoom = async () => {
     if (!socket) return
     const data: JoinRoomClient = { room, username: `${username}#${id}` }
     socket.emit(`joinRoom`, data)
     socket.emit(`fetchPlayers`, { room })
-    setGameType('online')
+    setGameType(`online`)
+
+    // Enable dev mode if debug toggle is on
+    if (debugEnabled) {
+      setDevMode(true)
+      setShowDebugSettings(true)
+    }
   }
 
   const startAiGame = async () => {
@@ -61,7 +77,7 @@ export const GameCreation: FC = () => {
       // Check health
       const isAlive = await aiClient.health()
       if (!isAlive) {
-        toast.error('AI Server is not running on 192.168.1.187:3001')
+        toast.error(`AI Server is not running on 192.168.1.187:3001`)
         return
       }
 
@@ -73,13 +89,19 @@ export const GameCreation: FC = () => {
         hash: currentConfig.hash,
       })
 
-      setGameType('local_ai')
+      setGameType(`local_ai`)
       setGameStarted(true)
       // Manually set joinedRoom to true to hide this modal
       setJoinedRoom(true)
+
+      // Enable dev mode if debug toggle is on
+      if (debugEnabled) {
+        setDevMode(true)
+        setShowDebugSettings(true)
+      }
     } catch (e) {
       console.error(e)
-      toast.error('Failed to start AI game')
+      toast.error(`Failed to start AI game`)
     }
   }
 
@@ -89,7 +111,7 @@ export const GameCreation: FC = () => {
         <>
           <div
             css={css`
-              width: ${mode === 'ai' ? '400px' : '300px'};
+              width: ${mode === `ai` ? `400px` : `300px`};
               position: absolute;
               top: 50%;
               left: 50%;
@@ -138,14 +160,59 @@ export const GameCreation: FC = () => {
               }
             `}
           >
-            <div css={css`display: flex; gap: 20px; border-bottom: 1px solid #ccc; width: 100%; margin-bottom: 10px; justify-content: center;`}>
-              <div css={tabStyle(mode === 'online')} onClick={() => setMode('online')}>Online</div>
-              <div css={tabStyle(mode === 'ai')} onClick={() => setMode('ai')}>Play vs AI</div>
+            <div
+              css={css`
+                display: flex;
+                gap: 20px;
+                border-bottom: 1px solid #ccc;
+                width: 100%;
+                margin-bottom: 10px;
+                justify-content: center;
+              `}
+            >
+              <div
+                css={tabStyle(mode === `online`)}
+                onClick={() => setMode(`online`)}
+              >
+                Online
+              </div>
+              <div css={tabStyle(mode === `ai`)} onClick={() => setMode(`ai`)}>
+                Play vs AI
+              </div>
             </div>
 
-            {mode === 'online' ? (
+            {/* Debug Mode Toggle - works for both modes */}
+            <label
+              css={css`
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                width: 100%;
+                cursor: pointer;
+                font-size: 14px;
+                color: #333;
+              `}
+            >
+              <input
+                type="checkbox"
+                checked={debugEnabled}
+                onChange={(e) => setDebugEnabled(e.target.checked)}
+                css={css`
+                  width: auto;
+                  cursor: pointer;
+                `}
+              />
+              Enable Debug Mode
+            </label>
+
+            {mode === `online` ? (
               <form
-                style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '20px' }}
+                style={{
+                  width: `100%`,
+                  display: `flex`,
+                  flexDirection: `column`,
+                  gap: `20px`,
+                }}
                 onSubmit={(e) => {
                   e.preventDefault()
                   if (username.length < 3 || room.length < 3) {
@@ -176,12 +243,23 @@ export const GameCreation: FC = () => {
                   />
                   <p>If no room exists one will be created.</p>
                 </div>
-                <button type="submit" className="primary">Join Room</button>
+                <button type="submit" className="primary">
+                  Join Room
+                </button>
               </form>
             ) : (
-              <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div
+                style={{
+                  width: `100%`,
+                  display: `flex`,
+                  flexDirection: `column`,
+                  gap: `20px`,
+                }}
+              >
                 <AiSettings />
-                <button className="primary" onClick={startAiGame}>Start Game</button>
+                <button className="primary" onClick={startAiGame}>
+                  Start Game
+                </button>
               </div>
             )}
           </div>

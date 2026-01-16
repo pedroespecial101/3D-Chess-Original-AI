@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "dev": "next dev -p 3005"
   },
   "dependencies": {
     "@emotion/css": "^11.10.5",

@@ -1,23 +1,19 @@
-import React, { useRef } from 'react'
 import type { FC } from 'react'
+import React from 'react'
 
-import { useGLTF } from '@react-three/drei'
-import type * as THREE from 'three'
-import type { GLTF } from 'three-stdlib'
+import { ModelProps } from './index'
+import { DalekModel } from './Dalek'
+import { K9Model } from './K9'
 
-type GLTFResult = GLTF & {
-  nodes: {
-    Object001: THREE.Mesh
-  }
-  materials: {
-    [`Object001_mtl.003`]: THREE.MeshStandardMaterial
-  }
+export const PawnModel: FC<ModelProps> = (props) => {
+  // Doctor Who side (white) uses K-9, Enemy side (black) uses Daleks
+  return props.color === `white` ? (
+    <K9Model {...props} />
+  ) : (
+    <DalekModel {...props} />
+  )
 }
 
-export const PawnModel: FC = () => {
-  const ref = useRef(null)
-  const { nodes } = useGLTF(`/pawn.gltf`) as unknown as GLTFResult
-  return <mesh ref={ref} attach="geometry" {...nodes.Object001.geometry} />
+export const PawnPreload = (): null => {
+  return null
 }
-
-useGLTF.preload(`/pawn.gltf`)

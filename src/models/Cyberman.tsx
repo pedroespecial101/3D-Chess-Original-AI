@@ -7,13 +7,16 @@ Source: https://sketchfab.com/3d-models/cyberman-b172f58aacea473f8af04c625906f86
 Title: Cyberman
 */
 
-import * as THREE from 'three'
 import React from 'react'
-import { useGraph } from '@react-three/fiber'
-import { useGLTF } from '@react-three/drei'
-import { GLTF, SkeletonUtils } from 'three-stdlib'
 
-import { PieceMaterial, ModelProps } from './index'
+import { useGLTF } from '@react-three/drei'
+import { useGraph } from '@react-three/fiber'
+import type * as THREE from 'three'
+import type { GLTF } from 'three-stdlib'
+import { SkeletonUtils } from 'three-stdlib'
+
+import type { ModelProps } from './index'
+import { PieceMaterial } from './index'
 
 type GLTFResult = GLTF & {
   nodes: {
@@ -23,40 +26,72 @@ type GLTFResult = GLTF & {
     _rootJoint: THREE.Bone
   }
   materials: {
-    ['Scene_-_Root']: THREE.MeshStandardMaterial
+    [`Scene_-_Root`]: THREE.MeshStandardMaterial
   }
 }
 
 export const CybermanModel: React.FC<ModelProps> = (props) => {
   const group = React.useRef<THREE.Group>(null)
-  const { scene, materials } = useGLTF('/cyberman.glb') as unknown as GLTFResult & { materials: GLTFResult['materials'] }
+  const { scene, materials } = useGLTF(
+    `/cyberman.glb`,
+  ) as unknown as GLTFResult & { materials: GLTFResult[`materials`] }
   const clone = React.useMemo(() => SkeletonUtils.clone(scene), [scene])
   const { nodes } = useGraph(clone) as GLTFResult
   const { color, isSelected, pieceIsBeingReplaced } = props
   const materialProps = { color, isSelected, pieceIsBeingReplaced }
 
   // Get the original material - Cyberman uses a single material for all meshes
-  const originalMaterial = materials?.['Scene_-_Root'] || null
+  const originalMaterial = materials?.[`Scene_-_Root`] || null
 
   // Scale to match other pieces - Cyberman is humanoid, adjust scale accordingly
   return (
     <group ref={group} dispose={null} scale={125} position={[0, -0.5, 0]}>
       <group name="Sketchfab_Scene">
         <group name="Sketchfab_model" rotation={[-Math.PI / 2, 0, 0]}>
-          <group name="9d52be6c04914ef0aaad1a02b5fa4d44fbx" rotation={[Math.PI / 2, 0, 0]} scale={0.01}>
+          <group
+            name="9d52be6c04914ef0aaad1a02b5fa4d44fbx"
+            rotation={[Math.PI / 2, 0, 0]}
+            scale={0.01}
+          >
             <group name="Object_2">
               <group name="RootNode">
-                <group name="Armature" position={[0.145, -0.157, -1.952]} rotation={[-Math.PI / 2, 0, 0]} scale={69.527}>
+                <group
+                  name="Armature"
+                  position={[0.145, -0.157, -1.952]}
+                  rotation={[-Math.PI / 2, 0, 0]}
+                  scale={69.527}
+                >
                   <group name="Object_5">
                     <primitive object={nodes._rootJoint} />
-                    <skinnedMesh name="Object_70" geometry={nodes.Object_70.geometry} skeleton={nodes.Object_70.skeleton}>
-                      <PieceMaterial {...materialProps} originalMaterial={originalMaterial} />
+                    <skinnedMesh
+                      name="Object_70"
+                      geometry={nodes.Object_70.geometry}
+                      skeleton={nodes.Object_70.skeleton}
+                    >
+                      <PieceMaterial
+                        {...materialProps}
+                        originalMaterial={originalMaterial}
+                      />
                     </skinnedMesh>
-                    <skinnedMesh name="Object_72" geometry={nodes.Object_72.geometry} skeleton={nodes.Object_72.skeleton}>
-                      <PieceMaterial {...materialProps} originalMaterial={originalMaterial} />
+                    <skinnedMesh
+                      name="Object_72"
+                      geometry={nodes.Object_72.geometry}
+                      skeleton={nodes.Object_72.skeleton}
+                    >
+                      <PieceMaterial
+                        {...materialProps}
+                        originalMaterial={originalMaterial}
+                      />
                     </skinnedMesh>
-                    <skinnedMesh name="Object_74" geometry={nodes.Object_74.geometry} skeleton={nodes.Object_74.skeleton}>
-                      <PieceMaterial {...materialProps} originalMaterial={originalMaterial} />
+                    <skinnedMesh
+                      name="Object_74"
+                      geometry={nodes.Object_74.geometry}
+                      skeleton={nodes.Object_74.skeleton}
+                    >
+                      <PieceMaterial
+                        {...materialProps}
+                        originalMaterial={originalMaterial}
+                      />
                     </skinnedMesh>
                   </group>
                 </group>
@@ -69,4 +104,4 @@ export const CybermanModel: React.FC<ModelProps> = (props) => {
   )
 }
 
-useGLTF.preload('/cyberman.glb')
+useGLTF.preload(`/cyberman.glb`)

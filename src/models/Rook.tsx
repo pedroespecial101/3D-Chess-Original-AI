@@ -5,9 +5,9 @@ import { useGLTF } from '@react-three/drei'
 import type * as THREE from 'three'
 import type { GLTF } from 'three-stdlib'
 
-import { ModelProps } from './index'
-import { TardisModel } from './Tardis'
 import { CybermanModel } from './Cyberman'
+import type { ModelProps } from './index'
+import { TardisModel } from './Tardis'
 
 type GLTFResult = GLTF & {
   nodes: {
@@ -24,7 +24,7 @@ export const RookComponent: FC<ModelProps> = (props) => {
   const { color } = props
 
   // White rooks use Tardis, black rooks use Cyberman
-  if (color === 'white') {
+  if (color === `white`) {
     return <TardisModel {...props} />
   }
 

@@ -35,20 +35,26 @@ export const useSocketState = create<{
 
 export const useSockets = ({ reset }: { reset: VoidFunction }): void => {
   const [addMessage] = useMessageState(useShallow((state) => [state.addMessage]))
-  const { setGameStarted, setMovingTo } = useGameSettingsState(useShallow((state) => ({
-    setGameStarted: state.setGameStarted,
-    setMovingTo: state.setMovingTo,
-  })))
-  const { setPlayerColor, setJoinedRoom } = usePlayerState(useShallow((state) => state))
+  const { setGameStarted, setMovingTo } = useGameSettingsState(
+    useShallow((state) => ({
+      setGameStarted: state.setGameStarted,
+      setMovingTo: state.setMovingTo,
+    })),
+  )
+  const { setPlayerColor, setJoinedRoom } = usePlayerState(
+    useShallow((state) => state),
+  )
 
-  const { setPosition, setName: setOpponentName } = useOpponentState(useShallow(
-    (state) => state,
-  ))
+  const { setPosition, setName: setOpponentName } = useOpponentState(
+    useShallow((state) => state),
+  )
 
-  const { socket: socketState, setSocket } = useSocketState(useShallow((state) => ({
-    socket: state.socket,
-    setSocket: state.setSocket,
-  })))
+  const { socket: socketState, setSocket } = useSocketState(
+    useShallow((state) => ({
+      socket: state.socket,
+      setSocket: state.setSocket,
+    })),
+  )
   useEffect(() => {
     socketInitializer()
 

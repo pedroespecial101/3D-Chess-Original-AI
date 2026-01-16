@@ -1,0 +1,33 @@
+diff --cc src/pages/index.tsx
+index 191c037,6118bb5..0000000
+--- a/src/pages/index.tsx
++++ b/src/pages/index.tsx
+@@@ -35,13 -35,18 +36,28 @@@ export const Home: FC = () => 
+    const [moves, setMoves] = useState<Move[]>([])
+    const [gameOver, setGameOver] = useState<GameOver | null>(null)
+    const resetHistory = useHistoryState((state) => state.reset)
+++<<<<<<< HEAD
+ +  const { resetTurn } = useGameSettingsState(useShallow((state) => ({
+ +    resetTurn: state.resetTurn,
+ +    gameStarted: state.gameStarted,
+ +  })))
+ +  const { joined } = usePlayerState(useShallow((state) => ({
+ +    joined: state.joinedRoom,
+ +  })))
+++=======
++   const { resetTurn, boardResetCounter } = useGameSettingsState((state) => ({
++     resetTurn: state.resetTurn,
++     gameStarted: state.gameStarted,
++     boardResetCounter: state.boardResetCounter,
++   }))
++   const { joined } = usePlayerState((state) => ({
++     joined: state.joinedRoom,
++   }))
++   const { setShowDebugSettings, showDebugSettings } = useGameSettingsState((state) => ({
++     setShowDebugSettings: state.setShowDebugSettings,
++     showDebugSettings: state.showDebugSettings,
++   }))
+++>>>>>>> models/master
+  
+    const reset = () => {
+      setBoard(createBoard())

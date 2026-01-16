@@ -1,8 +1,8 @@
 import type { FC } from 'react'
 import React from 'react'
 
-import { ModelProps } from './index'
 import { DalekModel } from './Dalek'
+import type { ModelProps } from './index'
 import { K9Model } from './K9'
 
 export const PawnModel: FC<ModelProps> = (props) => {

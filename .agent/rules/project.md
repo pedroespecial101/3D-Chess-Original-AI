@@ -1,9 +1,13 @@
+---
+trigger: always_on
+---
+
 # 3D Chess Project Rules
 
 ## Development Server
-- The dev server runs on **port 3005** (hardcoded in package.json)
+- The dev server runs on **port 3010 (hardcoded in package.json)
 - Start with: `npm run dev`
-- Access at: http://localhost:3005
+- Access at: http://localhost:3010
 
 ## Dev Mode
 - Use the **"Quick Join (Dev)"** button on the start screen to enter dev mode

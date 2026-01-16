@@ -1,6 +1,5 @@
 import React, { useRef, useMemo } from 'react'
 import type { FC } from 'react'
-import * as THREE from 'three'
 
 import type { Position } from '@logic/board'
 import { useSpring, animated } from '@react-spring/three'
@@ -11,13 +10,16 @@ import type {
   Transition,
 } from 'framer-motion'
 import { motion } from 'framer-motion-3d'
-import { useGameSettingsState, TextureMode } from '@/state/game'
+import type * as THREE from 'three'
 
-export type PieceMaterialProps = JSX.IntrinsicElements[`meshPhysicalMaterial`] & {
-  isSelected: boolean
-  pieceIsBeingReplaced: boolean
-  originalMaterial?: THREE.Material | null
-}
+import { useGameSettingsState } from '@/state/game'
+
+export type PieceMaterialProps =
+  JSX.IntrinsicElements[`meshPhysicalMaterial`] & {
+    isSelected: boolean
+    pieceIsBeingReplaced: boolean
+    originalMaterial?: THREE.Material | null
+  }
 
 export const PieceMaterial: FC<PieceMaterialProps> = ({
   color,
@@ -48,7 +50,7 @@ export const PieceMaterial: FC<PieceMaterialProps> = ({
   }, [originalMaterial])
 
   // Metallic mode (current behavior)
-  if (textureMode === 'metallic' || !originalMaterial) {
+  if (textureMode === `metallic` || !originalMaterial) {
     return (
       // @ts-ignore
       <animated.meshPhysicalMaterial
@@ -67,12 +69,12 @@ export const PieceMaterial: FC<PieceMaterialProps> = ({
   }
 
   // Original mode - use GLB textures as-is
-  if (textureMode === 'original') {
+  if (textureMode === `original`) {
     return (
       // @ts-ignore
       <animated.meshPhysicalMaterial
         map={originalProps?.map}
-        color={originalProps?.color || '#ffffff'}
+        color={originalProps?.color || `#ffffff`}
         normalMap={originalProps?.normalMap}
         aoMap={originalProps?.aoMap}
         emissive={isSelected ? `#733535` : `#000000`}
@@ -93,7 +95,7 @@ export const PieceMaterial: FC<PieceMaterialProps> = ({
     // @ts-ignore
     <animated.meshPhysicalMaterial
       map={originalProps?.map}
-      color={originalProps?.color || '#ffffff'}
+      color={originalProps?.color || `#ffffff`}
       normalMap={originalProps?.normalMap}
       aoMap={originalProps?.aoMap}
       emissive={isSelected ? `#733535` : `#000000`}
@@ -111,7 +113,6 @@ export const PieceMaterial: FC<PieceMaterialProps> = ({
     />
   )
 }
-
 
 export type ModelProps = JSX.IntrinsicElements[`group`] & {
   color: string
@@ -151,21 +152,21 @@ export const MeshWrapper: FC<ModelProps> = ({
           movingTo
             ? variants.move({ movingTo, isSelected: true })
             : pieceIsBeingReplaced
-              ? variants.replace({ movingTo, isSelected })
-              : isSelected
-                ? variants.select({ movingTo, isSelected })
-                : variants.initial({ movingTo, isSelected })
+            ? variants.replace({ movingTo, isSelected })
+            : isSelected
+            ? variants.select({ movingTo, isSelected })
+            : variants.initial({ movingTo, isSelected })
         }
         transition={
           movingTo
             ? transitions.moveTo
             : pieceIsBeingReplaced
-              ? transitions.replace
-              : isSelected
-                ? transitions.select
-                : wasSelected
-                  ? transitions.wasSelected
-                  : transitions.initial
+            ? transitions.replace
+            : isSelected
+            ? transitions.select
+            : wasSelected
+            ? transitions.wasSelected
+            : transitions.initial
         }
         onAnimationComplete={() => {
           if (movingTo) {

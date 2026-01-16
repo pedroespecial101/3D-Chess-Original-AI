@@ -7,12 +7,14 @@ Source: https://sketchfab.com/3d-models/k9-16bb4f352e714c50b6fd5f11e0ed60c5
 Title: K9
 */
 
-import * as THREE from 'three'
 import React from 'react'
-import { useGLTF } from '@react-three/drei'
-import { GLTF } from 'three-stdlib'
 
-import { PieceMaterial, ModelProps } from './index'
+import { useGLTF } from '@react-three/drei'
+import type * as THREE from 'three'
+import type { GLTF } from 'three-stdlib'
+
+import type { ModelProps } from './index'
+import { PieceMaterial } from './index'
 
 type GLTFResult = GLTF & {
   nodes: {
@@ -31,39 +33,57 @@ type GLTFResult = GLTF & {
 }
 
 export const K9Model: React.FC<ModelProps> = (props) => {
-  const { nodes, materials } = useGLTF('/k9.glb') as unknown as GLTFResult
+  const { nodes, materials } = useGLTF(`/k9.glb`) as unknown as GLTFResult
   const { color, isSelected, pieceIsBeingReplaced } = props
   const materialProps = { color, isSelected, pieceIsBeingReplaced }
 
   // Black pieces need to face the opposite direction
   // K-9 model has a slight rotation offset (~0.844 rad) that we need to counter
   // Added 135° CW rotation (-3π/4 radians) per user request
-  const baseRotation = -0.844 - (3 * Math.PI / 4) // Counter built-in rotation + 135° CW
-  const yRotation = color === 'black' ? baseRotation + Math.PI : baseRotation
+  const baseRotation = -0.844 - (3 * Math.PI) / 4 // Counter built-in rotation + 135° CW
+  const yRotation = color === `black` ? baseRotation + Math.PI : baseRotation
 
   return (
     <group dispose={null} scale={250} rotation={[0, yRotation, 0]}>
       <group position={[-0.048, 0, 0.022]}>
         <group position={[-0.001, -0.001, 0]}>
           <mesh geometry={nodes.Object_9.geometry}>
-            <PieceMaterial {...materialProps} originalMaterial={materials.PaletteMaterial001} />
+            <PieceMaterial
+              {...materialProps}
+              originalMaterial={materials.PaletteMaterial001}
+            />
           </mesh>
         </group>
         <mesh geometry={nodes.Object_4.geometry}>
-          <PieceMaterial {...materialProps} originalMaterial={materials.PaletteMaterial002} />
+          <PieceMaterial
+            {...materialProps}
+            originalMaterial={materials.PaletteMaterial002}
+          />
         </mesh>
         <mesh geometry={nodes.Object_21.geometry}>
-          <PieceMaterial {...materialProps} originalMaterial={materials.PaletteMaterial003} />
+          <PieceMaterial
+            {...materialProps}
+            originalMaterial={materials.PaletteMaterial003}
+          />
         </mesh>
         <mesh geometry={nodes.Object_33.geometry} position={[0, 0.015, 0]}>
-          <PieceMaterial {...materialProps} originalMaterial={materials.Collar} />
+          <PieceMaterial
+            {...materialProps}
+            originalMaterial={materials.Collar}
+          />
         </mesh>
-        <mesh geometry={nodes.Object_90.geometry} position={[0.003, 0.004, 0.003]}>
-          <PieceMaterial {...materialProps} originalMaterial={materials.PaletteMaterial001} />
+        <mesh
+          geometry={nodes.Object_90.geometry}
+          position={[0.003, 0.004, 0.003]}
+        >
+          <PieceMaterial
+            {...materialProps}
+            originalMaterial={materials.PaletteMaterial001}
+          />
         </mesh>
       </group>
     </group>
   )
 }
 
-useGLTF.preload('/k9.glb')
+useGLTF.preload(`/k9.glb`)

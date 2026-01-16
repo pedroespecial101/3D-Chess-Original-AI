@@ -5,7 +5,7 @@ import type { Color } from '@/logic/pieces'
 import { oppositeColor } from '@/logic/pieces'
 
 export type IsolatedPiece = {
-  type: 'pawn' | 'rook' | 'knight' | 'bishop' | 'queen' | 'king'
+  type: `bishop` | `king` | `knight` | `pawn` | `queen` | `rook`
   color: Color
 } | null
 
@@ -15,11 +15,11 @@ export type PieceRotation = {
   z: number
 }
 
-export type TextureMode = 'metallic' | 'original' | 'hybrid'
+export type TextureMode = `hybrid` | `metallic` | `original`
 
 export const useGameSettingsState = create<{
-  gameType: `local` | `online` | `local_ai`
-  setGameType: (type: `local` | `online` | `local_ai`) => void
+  gameType: `local_ai` | `local` | `online`
+  setGameType: (type: `local_ai` | `local` | `online`) => void
   turn: Color
   setTurn: () => void
   resetTurn: () => void
@@ -81,12 +81,14 @@ export const useGameSettingsState = create<{
   enablePanning: false,
   setEnablePanning: (enable: boolean) => set({ enablePanning: enable }),
   cameraResetCounter: 0,
-  triggerCameraReset: () => set((state) => ({ cameraResetCounter: state.cameraResetCounter + 1 })),
+  triggerCameraReset: () =>
+    set((state) => ({ cameraResetCounter: state.cameraResetCounter + 1 })),
   // Dev mode defaults
   devMode: false,
   setDevMode: (enabled: boolean) => set({ devMode: enabled }),
   allowAnyColorMove: true,
-  setAllowAnyColorMove: (enabled: boolean) => set({ allowAnyColorMove: enabled }),
+  setAllowAnyColorMove: (enabled: boolean) =>
+    set({ allowAnyColorMove: enabled }),
   isolatedPiece: null,
   setIsolatedPiece: (piece: IsolatedPiece) => set({ isolatedPiece: piece }),
   freeMove: false,
@@ -100,11 +102,13 @@ export const useGameSettingsState = create<{
   animationLoop: true,
   setAnimationLoop: (loop: boolean) => set({ animationLoop: loop }),
   pieceRotation: { x: 0, y: 0, z: 0 },
-  setPieceRotation: (rotation: PieceRotation) => set({ pieceRotation: rotation }),
+  setPieceRotation: (rotation: PieceRotation) =>
+    set({ pieceRotation: rotation }),
   resetPieceRotation: () => set({ pieceRotation: { x: 0, y: 0, z: 0 } }),
   boardResetCounter: 0,
-  triggerBoardReset: () => set((state) => ({ boardResetCounter: state.boardResetCounter + 1 })),
+  triggerBoardReset: () =>
+    set((state) => ({ boardResetCounter: state.boardResetCounter + 1 })),
   // Texture mode defaults
-  textureMode: 'metallic',
+  textureMode: `metallic`,
   setTextureMode: (mode: TextureMode) => set({ textureMode: mode }),
 }))

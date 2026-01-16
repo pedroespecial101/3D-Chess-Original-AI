@@ -7,12 +7,14 @@ Source: https://sketchfab.com/3d-models/tardis-william-hartnell-era-c89383e2ee69
 Title: TARDIS - William Hartnell Era
 */
 
-import * as THREE from 'three'
 import React from 'react'
-import { useGLTF } from '@react-three/drei'
-import { GLTF } from 'three-stdlib'
 
-import { PieceMaterial, ModelProps } from './index'
+import { useGLTF } from '@react-three/drei'
+import type * as THREE from 'three'
+import type { GLTF } from 'three-stdlib'
+
+import type { ModelProps } from './index'
+import { PieceMaterial } from './index'
 
 type GLTFResult = GLTF & {
   nodes: {
@@ -34,7 +36,7 @@ type GLTFResult = GLTF & {
 }
 
 export const TardisModel: React.FC<ModelProps> = (props) => {
-  const { nodes, materials } = useGLTF('/tardis.glb') as unknown as GLTFResult
+  const { nodes, materials } = useGLTF(`/tardis.glb`) as unknown as GLTFResult
   const { color, isSelected, pieceIsBeingReplaced } = props
   const materialProps = { color, isSelected, pieceIsBeingReplaced }
 
@@ -43,25 +45,61 @@ export const TardisModel: React.FC<ModelProps> = (props) => {
   return (
     <group dispose={null} scale={130}>
       <mesh geometry={nodes.Object_4.geometry} position={[0, 0.079, 0]}>
-        <PieceMaterial {...materialProps} originalMaterial={materials.PaletteMaterial001} />
+        <PieceMaterial
+          {...materialProps}
+          originalMaterial={materials.PaletteMaterial001}
+        />
       </mesh>
-      <mesh geometry={nodes.Object_8.geometry} position={[0.057, 2.227, 0.603]} rotation={[Math.PI / 2, 0, 0]} scale={[0.04, 1, 0.04]}>
-        <PieceMaterial {...materialProps} originalMaterial={materials.PaletteMaterial002} />
+      <mesh
+        geometry={nodes.Object_8.geometry}
+        position={[0.057, 2.227, 0.603]}
+        rotation={[Math.PI / 2, 0, 0]}
+        scale={[0.04, 1, 0.04]}
+      >
+        <PieceMaterial
+          {...materialProps}
+          originalMaterial={materials.PaletteMaterial002}
+        />
       </mesh>
-      <mesh geometry={nodes.Object_27.geometry} position={[0.236, 1.314, 0.543]} rotation={[Math.PI / 2, 1.466, 0]} scale={0.163}>
-        <PieceMaterial {...materialProps} originalMaterial={materials.Material} />
+      <mesh
+        geometry={nodes.Object_27.geometry}
+        position={[0.236, 1.314, 0.543]}
+        rotation={[Math.PI / 2, 1.466, 0]}
+        scale={0.163}
+      >
+        <PieceMaterial
+          {...materialProps}
+          originalMaterial={materials.Material}
+        />
       </mesh>
-      <mesh geometry={nodes.Object_39.geometry} position={[-0.241, 1.31, 0.537]} scale={[0.794, 22.529, 0.364]}>
-        <PieceMaterial {...materialProps} originalMaterial={materials.Phone_Panel} />
+      <mesh
+        geometry={nodes.Object_39.geometry}
+        position={[-0.241, 1.31, 0.537]}
+        scale={[0.794, 22.529, 0.364]}
+      >
+        <PieceMaterial
+          {...materialProps}
+          originalMaterial={materials.Phone_Panel}
+        />
       </mesh>
-      <mesh geometry={nodes.Object_49.geometry} position={[0, 2.651, 0]} scale={[0.167, 0.25, 0.167]}>
-        <PieceMaterial {...materialProps} originalMaterial={materials.PaletteMaterial003} />
+      <mesh
+        geometry={nodes.Object_49.geometry}
+        position={[0, 2.651, 0]}
+        scale={[0.167, 0.25, 0.167]}
+      >
+        <PieceMaterial
+          {...materialProps}
+          originalMaterial={materials.PaletteMaterial003}
+        />
       </mesh>
       <mesh geometry={nodes.Object_52.geometry} position={[0, 0.079, 0]}>
-        <PieceMaterial {...materialProps} originalMaterial={materials.PaletteMaterial004} />
+        <PieceMaterial
+          {...materialProps}
+          originalMaterial={materials.PaletteMaterial004}
+        />
       </mesh>
     </group>
   )
 }
 
-useGLTF.preload('/tardis.glb')
+useGLTF.preload(`/tardis.glb`)

@@ -3,6 +3,19 @@
 ** Read README.md for AI coding agent focused project overview and documentation. **
 ** Follow the AI coding agent rules in .agent/rules/ **
 
+## [2026-01-16] - Fixed React Infinite Loop Error
+
+### Fixed
+- Fixed "Maximum update depth exceeded" React error on startup caused by incorrect Zustand state selector usage
+- Added `useShallow` wrapper to `useAiState` selector in `Board.tsx` (line 97)
+- Added `useShallow` wrapper to dev mode state selector in `Board.tsx` (line 113)  
+- Added `useShallow` wrapper to `useGameSettingsState` selector in `DebugSettings.tsx` (line 131)
+
+### Technical Details
+Zustand selectors that return new objects (e.g., `(state) => ({ key: state.key })`) create new references on every render, triggering infinite re-render loops. Using `useShallow` performs a shallow comparison of object keys to prevent unnecessary re-renders.
+
+---
+
 ## [2026-01-16] - Merged AI + Models Branches
 
 ### Added

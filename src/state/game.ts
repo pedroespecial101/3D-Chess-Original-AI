@@ -109,6 +109,6 @@ export const useGameSettingsState = create<{
   triggerBoardReset: () =>
     set((state) => ({ boardResetCounter: state.boardResetCounter + 1 })),
   // Texture mode defaults
-  textureMode: `metallic`,
+  textureMode: `hybrid`,
   setTextureMode: (mode: TextureMode) => set({ textureMode: mode }),
 }))

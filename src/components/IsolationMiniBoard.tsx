@@ -12,6 +12,7 @@ import {
 
 import type { Color } from '@/logic/pieces'
 import { useGameSettingsState } from '@/state/game'
+import { useShallow } from 'zustand/react/shallow'
 
 type PieceType = `bishop` | `king` | `knight` | `pawn` | `queen` | `rook`
 
@@ -70,10 +71,12 @@ const PieceIcon: FC<{ type: PieceType }> = ({ type }) => {
 }
 
 export const IsolationMiniBoard: FC = () => {
-  const { isolatedPiece, setIsolatedPiece } = useGameSettingsState((state) => ({
-    isolatedPiece: state.isolatedPiece,
-    setIsolatedPiece: state.setIsolatedPiece,
-  }))
+  const { isolatedPiece, setIsolatedPiece } = useGameSettingsState(
+    useShallow((state) => ({
+      isolatedPiece: state.isolatedPiece,
+      setIsolatedPiece: state.setIsolatedPiece,
+    })),
+  )
 
   const handlePieceClick = (piece: { type: PieceType; color: Color } | null) => {
     if (!piece) return
@@ -174,8 +177,8 @@ export const IsolationMiniBoard: FC = () => {
                     background-color: ${isPieceIsolated
                       ? `rgba(102, 126, 234, 0.6)`
                       : isLight
-                      ? `#a5a5a5`
-                      : `#676767`};
+                        ? `#a5a5a5`
+                        : `#676767`};
                     display: flex;
                     align-items: center;
                     justify-content: center;
@@ -188,19 +191,18 @@ export const IsolationMiniBoard: FC = () => {
                     ${hasPiece &&
                     `
                       &:hover {
-                        background-color: ${
-                          isPieceIsolated
-                            ? `rgba(102, 126, 234, 0.8)`
-                            : `rgba(102, 126, 234, 0.3)`
-                        };
+                        background-color: ${isPieceIsolated
+                      ? `rgba(102, 126, 234, 0.8)`
+                      : `rgba(102, 126, 234, 0.3)`
+                    };
                       }
                     `}
                     svg {
                       font-size: 14px;
                       color: ${piece?.color === `white` ? `#fff` : `#1a1a1a`};
                       filter: ${piece?.color === `white`
-                        ? `drop-shadow(0 1px 1px rgba(0,0,0,0.5))`
-                        : `drop-shadow(0 1px 1px rgba(255,255,255,0.3))`};
+                      ? `drop-shadow(0 1px 1px rgba(0,0,0,0.5))`
+                      : `drop-shadow(0 1px 1px rgba(255,255,255,0.3))`};
                     }
                   `}
                 >

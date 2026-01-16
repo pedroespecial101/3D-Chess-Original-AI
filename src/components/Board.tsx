@@ -14,13 +14,13 @@ import {
   movesForPiece,
 } from '@logic/pieces'
 import { isPawn } from '@logic/pieces/pawn'
-import { BishopComponent } from '@models/Bishop'
+import { BishopModel } from '@models/Bishop'
 import type { ModelProps } from '@models/index'
 import { MeshWrapper } from '@models/index'
-import { KingComponent } from '@models/King'
-import { KnightComponent } from '@models/Knight'
+import { KingModel } from '@models/King'
+import { KnightModel } from '@models/Knight'
 import { PawnModel } from '@models/Pawn'
-import { QueenComponent } from '@models/Queen'
+import { QueenModel } from '@models/Queen'
 import { RookComponent } from '@models/Rook'
 import { TileComponent } from '@models/Tile'
 import { useSpring, animated } from '@react-spring/three'
@@ -505,9 +505,8 @@ export const BoardComponent: FC<{
             }
 
             const pieceId = tile.piece?.getId() ?? `empty-${j}-${i}`
-            const isFullModel =
-              tile.piece?.type === `pawn` ||
-              (tile.piece?.type === `rook` && tile.piece?.color === `white`)
+            // All pieces now use full model pattern (temporary until Doctor Who models added)
+            const isFullModel = true
 
             // Check if piece should be visible (for isolation mode)
             const pieceVisible = shouldShowPiece(tile.piece)
@@ -546,10 +545,10 @@ export const BoardComponent: FC<{
                     <group rotation={pieceRotationRadians}>
                       {tile.piece?.type === `pawn` && <PawnModel {...props} />}
                       {tile.piece?.type === `rook` && <RookComponent {...props} />}
-                      {tile.piece?.type === `knight` && <KnightComponent />}
-                      {tile.piece?.type === `bishop` && <BishopComponent />}
-                      {tile.piece?.type === `queen` && <QueenComponent />}
-                      {tile.piece?.type === `king` && <KingComponent />}
+                      {tile.piece?.type === `knight` && <KnightModel {...props} />}
+                      {tile.piece?.type === `bishop` && <BishopModel {...props} />}
+                      {tile.piece?.type === `queen` && <QueenModel {...props} />}
+                      {tile.piece?.type === `king` && <KingModel {...props} />}
                     </group>
                   </MeshWrapper>
                 )}

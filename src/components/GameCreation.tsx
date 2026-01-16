@@ -3,7 +3,9 @@ import type { ChangeEvent, FC } from 'react'
 import { css } from '@emotion/react'
 import { toast } from 'react-toastify'
 
+import { useGameSettingsState } from '@/state/game'
 import { usePlayerState } from '@/state/player'
+import { isDev } from '@/utils/isDev'
 import { useSocketState } from '@/utils/socket'
 
 export type JoinRoomClient = {
@@ -26,12 +28,30 @@ export const GameCreation: FC = () => {
   const { socket } = useSocketState((state) => ({
     socket: state.socket,
   }))
-  const sendRoom = async () => {
+  const { setDevMode, setShowDebugSettings } = useGameSettingsState((state) => ({
+    setDevMode: state.setDevMode,
+    setShowDebugSettings: state.setShowDebugSettings,
+  }))
+
+  const sendRoom = async (isDevJoin: boolean = false) => {
     if (!socket) return
-    const data: JoinRoomClient = { room, username: `${username}#${id}` }
+    const joinRoom = isDevJoin ? 'dev' : room
+    const joinUsername = isDevJoin ? 'dev' : username
+    const data: JoinRoomClient = { room: joinRoom, username: `${joinUsername}#${id}` }
     socket.emit(`joinRoom`, data)
-    socket.emit(`fetchPlayers`, { room })
+    socket.emit(`fetchPlayers`, { room: joinRoom })
+
+    // Set dev mode based on join type
+    setDevMode(isDevJoin)
+    if (isDevJoin) {
+      setShowDebugSettings(true)
+    }
   }
+
+  const handleDevJoin = () => {
+    sendRoom(true)
+  }
+
   return (
     <>
       {!joinedRoom && (
@@ -45,7 +65,7 @@ export const GameCreation: FC = () => {
                 })
                 return
               }
-              sendRoom()
+              sendRoom(false)
             }}
           >
             <div
@@ -104,6 +124,34 @@ export const GameCreation: FC = () => {
                 <p>If no room exists one will be created.</p>
               </div>
               <button type="submit">Join Room</button>
+              {isDev && (
+                <button
+                  type="button"
+                  onClick={handleDevJoin}
+                  css={css`
+                    width: 100%;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-weight: 600;
+                    font-size: 0.9rem;
+                    transition: all 0.2s ease;
+                    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+                    &:hover {
+                      transform: translateY(-1px);
+                      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.6);
+                    }
+                    &:active {
+                      transform: translateY(0);
+                    }
+                  `}
+                >
+                  🚀 Quick Join (Dev)
+                </button>
+              )}
             </div>
           </form>
           <div
@@ -122,3 +170,4 @@ export const GameCreation: FC = () => {
     </>
   )
 }
+

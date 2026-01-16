@@ -19,7 +19,7 @@ type GLTFResult = GLTF & {
 }
 
 export const DalekModel: React.FC<ModelProps> = (props) => {
-    const { nodes } = useGLTF('/dalek.glb') as unknown as GLTFResult
+    const { nodes, materials } = useGLTF('/dalek.glb') as unknown as GLTFResult
     const { color, isSelected, pieceIsBeingReplaced } = props
     const materialProps = { color, isSelected, pieceIsBeingReplaced }
 
@@ -29,13 +29,13 @@ export const DalekModel: React.FC<ModelProps> = (props) => {
     return (
         <group dispose={null} scale={180} rotation={[0, yRotation, 0]}>
             <mesh geometry={nodes.Object_4.geometry} position={[0, 0.781, 0]}>
-                <PieceMaterial {...materialProps} />
+                <PieceMaterial {...materialProps} originalMaterial={materials.PaletteMaterial001} />
             </mesh>
             <mesh geometry={nodes.Object_35.geometry} position={[0.194, 1.508, -0.023]} rotation={[0, 0.001, -0.716]} scale={0.5}>
-                <PieceMaterial {...materialProps} />
+                <PieceMaterial {...materialProps} originalMaterial={materials.PaletteMaterial002} />
             </mesh>
             <mesh geometry={nodes.Object_50.geometry} position={[0, 0.984, -0.072]} scale={[1.074, 1.082, 1.074]}>
-                <PieceMaterial {...materialProps} />
+                <PieceMaterial {...materialProps} originalMaterial={materials.PaletteMaterial003} />
             </mesh>
         </group>
     )

@@ -35,9 +35,10 @@ export const Home: FC = () => {
   const [moves, setMoves] = useState<Move[]>([])
   const [gameOver, setGameOver] = useState<GameOver | null>(null)
   const resetHistory = useHistoryState((state) => state.reset)
-  const { resetTurn } = useGameSettingsState((state) => ({
+  const { resetTurn, boardResetCounter } = useGameSettingsState((state) => ({
     resetTurn: state.resetTurn,
     gameStarted: state.gameStarted,
+    boardResetCounter: state.boardResetCounter,
   }))
   const { joined } = usePlayerState((state) => ({
     joined: state.joinedRoom,
@@ -57,6 +58,13 @@ export const Home: FC = () => {
   }
 
   useSockets({ reset })
+
+  // Handle board reset from debug panel
+  useEffect(() => {
+    if (boardResetCounter > 0) {
+      reset()
+    }
+  }, [boardResetCounter])
 
   const [total, setTotal] = useState(0)
   const { progress } = useProgress()

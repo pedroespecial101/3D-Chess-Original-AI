@@ -31,7 +31,7 @@ type GLTFResult = GLTF & {
 }
 
 export const K9Model: React.FC<ModelProps> = (props) => {
-  const { nodes } = useGLTF('/k9.glb') as unknown as GLTFResult
+  const { nodes, materials } = useGLTF('/k9.glb') as unknown as GLTFResult
   const { color, isSelected, pieceIsBeingReplaced } = props
   const materialProps = { color, isSelected, pieceIsBeingReplaced }
 
@@ -46,20 +46,20 @@ export const K9Model: React.FC<ModelProps> = (props) => {
       <group position={[-0.048, 0, 0.022]}>
         <group position={[-0.001, -0.001, 0]}>
           <mesh geometry={nodes.Object_9.geometry}>
-            <PieceMaterial {...materialProps} />
+            <PieceMaterial {...materialProps} originalMaterial={materials.PaletteMaterial001} />
           </mesh>
         </group>
         <mesh geometry={nodes.Object_4.geometry}>
-          <PieceMaterial {...materialProps} />
+          <PieceMaterial {...materialProps} originalMaterial={materials.PaletteMaterial002} />
         </mesh>
         <mesh geometry={nodes.Object_21.geometry}>
-          <PieceMaterial {...materialProps} />
+          <PieceMaterial {...materialProps} originalMaterial={materials.PaletteMaterial003} />
         </mesh>
         <mesh geometry={nodes.Object_33.geometry} position={[0, 0.015, 0]}>
-          <PieceMaterial {...materialProps} />
+          <PieceMaterial {...materialProps} originalMaterial={materials.Collar} />
         </mesh>
         <mesh geometry={nodes.Object_90.geometry} position={[0.003, 0.004, 0.003]}>
-          <PieceMaterial {...materialProps} />
+          <PieceMaterial {...materialProps} originalMaterial={materials.PaletteMaterial001} />
         </mesh>
       </group>
     </group>

@@ -1,5 +1,64 @@
 # Changelog
-I've updated the changelog to include the new zoom and debug settings.
+
+## [2026-01-16] - Texture Mode Switching
+### Added
+- **Texture Mode Toggle**: Three rendering modes for chess pieces accessible via Debug Settings panel
+  - **Metallic**: Original uniform chrome/metallic appearance (default)
+  - **Original**: Uses the actual textures embedded in GLB model files
+  - **Hybrid**: Blends original textures with metallic properties (clearcoat, high metalness)
+- Added `textureMode` setting to game state store
+- Added `originalMaterial` prop support to `PieceMaterial` component
+- Updated model components (Dalek, Tardis, K9, Cyberman) to pass original materials through
+
+### Changed
+- Refactored `PieceMaterial` in `src/models/index.tsx` to support all three texture modes
+- Enhanced `DebugSettings.tsx` with new "Texture Mode" section and toggle buttons
+
+---
+
+## [2026-01-10]
+### Fixed
+- Started the development server for the 3D chess project.
+- Verified game accessibility and themed pieces via browser subagent.
+
+## [2026-01-05] - Development Mode Features
+### Added
+- **Quick Join (Dev) button**: Bypasses login screen, joins "dev" room instantly, and enables dev mode
+- **Development Mode**: Master toggle that enables all dev features when joined via Quick Join
+- **Move Any Color toggle**: Allows moving both white and black pieces in the same session
+- **Free Move toggle**: Placeholder for moving pieces anywhere (ignoring legal moves)
+- **Piece Isolation Mode**: Click on mini chessboard to isolate a specific piece type
+  - Shows only the selected piece type/color on the board
+  - Centers isolated piece for easier viewing
+  - Camera auto-focuses on isolated piece
+- **Piece Rotation Controls**: 3-axis rotation sliders for isolated pieces (X, Y, Z)
+- **Animation Controls** (shown in isolation mode):
+  - Play/Pause button
+  - Step forward button
+  - Speed slider (0.1x - 2x)
+  - Loop toggle
+- **Verbose Logging toggle**: Enables detailed console logging for piece selection and moves
+- **Reset Board button**: Resets the game board to starting position
+- Created `IsolationMiniBoard.tsx` component with clickable 2D chessboard
+
+### Changed
+- Completely redesigned `DebugSettings.tsx` with organized sections and improved styling
+- Enhanced `Board.tsx` with dev mode state and piece isolation logic
+- Updated `GameCreation.tsx` with Quick Join button and dev mode handling
+- Expanded `game.ts` state with all new dev mode properties
+
+---
+
+## [2026-01-05]
+### Changed
+- Thoroughly updated `README.md` with comprehensive project documentation:
+  - Added project purpose: Doctor Who themed 3D chess game
+  - Documented the development roadmap (3 stages: Character Integration, Animation, AI)
+  - Added architecture section with technology stack and project structure
+  - Included character mapping table (white = Doctor's allies, black = enemies)
+  - Added getting started guide and available scripts
+  - Noted the project this is based upon
+- Started the development server.
 
 ## [2026-01-04]
 ### Added

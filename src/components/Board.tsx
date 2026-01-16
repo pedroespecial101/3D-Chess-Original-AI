@@ -86,6 +86,25 @@ export const BoardComponent: FC<{
       ])
     const socket = useSocketState((state) => state.socket)
 
+    // Dev mode state
+    const {
+      devMode,
+      allowAnyColorMove,
+      isolatedPiece,
+      freeMove,
+      verboseLogging,
+      pieceRotation,
+      boardResetCounter,
+    } = useGameSettingsState((state) => ({
+      devMode: state.devMode,
+      allowAnyColorMove: state.allowAnyColorMove,
+      isolatedPiece: state.isolatedPiece,
+      freeMove: state.freeMove,
+      verboseLogging: state.verboseLogging,
+      pieceRotation: state.pieceRotation,
+      boardResetCounter: state.boardResetCounter,
+    }))
+
     const [redLightPosition, setRedLightPosition] = useState<Position>({
       x: 0,
       y: 0,
@@ -93,7 +112,9 @@ export const BoardComponent: FC<{
 
     const selectThisPiece = (e: ThreeMouseEvent, tile: Tile | null) => {
       e.stopPropagation()
-      const isPlayersTurn = turn === playerColor || isDev
+      // In dev mode with allowAnyColorMove, skip turn check
+      const canMoveAnyColor = devMode && allowAnyColorMove
+      const isPlayersTurn = turn === playerColor || isDev || canMoveAnyColor
       if (!isPlayersTurn || !gameStarted) return
       if (!tile?.piece?.type && !selected) return
       if (!tile?.piece) {
@@ -101,10 +122,24 @@ export const BoardComponent: FC<{
         return
       }
 
+      // In dev mode, allow selecting any piece regardless of color
+      if (!canMoveAnyColor && tile.piece.color !== turn) {
+        if (verboseLogging) {
+          console.log('[Dev] Blocked: Not your turn to move', tile.piece.color, 'pieces')
+        }
+        return
+      }
+
       setMovingTo(null)
-      setMoves(
-        movesForPiece({ piece: tile.piece, board, propagateDetectCheck: true }),
-      )
+      const pieceMoves = movesForPiece({ piece: tile.piece, board, propagateDetectCheck: true })
+
+      if (verboseLogging) {
+        console.log('[Dev] Selected piece:', tile.piece.type, tile.piece.color)
+        console.log('[Dev] Available moves:', pieceMoves.length)
+        pieceMoves.forEach((m, i) => console.log(`  [${i}]`, m.newPosition, m.type))
+      }
+
+      setMoves(pieceMoves)
       setSelected(tile.piece)
       setLastSelected(tile)
       setRedLightPosition(tile.position)
@@ -229,6 +264,30 @@ export const BoardComponent: FC<{
       }
     }, [cameraResetCounter, camera])
 
+    // Focus camera on isolated piece
+    useEffect(() => {
+      if (isolatedPiece && controlsRef.current) {
+        // Center the camera on the board center for isolated piece viewing
+        camera.position.set(-6, 4, 4)
+        controlsRef.current.target.set(3.5, 0, 3.5)
+        controlsRef.current.update()
+        if (verboseLogging) {
+          console.log('[Dev] Camera focused on isolated piece:', isolatedPiece.type, isolatedPiece.color)
+        }
+      }
+    }, [isolatedPiece, camera, verboseLogging])
+
+    // Handle board reset
+    useEffect(() => {
+      if (boardResetCounter > 0) {
+        // The board reset is handled in the parent component via createBoard()
+        // This effect just logs it
+        if (verboseLogging) {
+          console.log('[Dev] Board reset triggered')
+        }
+      }
+    }, [boardResetCounter, verboseLogging])
+
     useEffect(() => {
       const interval = setInterval(() => {
         const { x, y, z } = camera.position
@@ -240,6 +299,12 @@ export const BoardComponent: FC<{
       }, 1000)
       return () => clearInterval(interval)
     }, [camera.position, socket, room, playerColor])
+
+    // Helper to check if piece should be shown (for isolation mode)
+    const shouldShowPiece = (piece: Piece | null) => {
+      if (!isolatedPiece || !piece) return true
+      return piece.type === isolatedPiece.type && piece.color === isolatedPiece.color
+    }
 
     return (
       <group position={[-3.5, -0.5, -3.5]}>
@@ -293,9 +358,16 @@ export const BoardComponent: FC<{
               const tileContainsOtherPlayersPiece =
                 tile.piece && tile.piece?.color !== turn
 
-              if (tileContainsOtherPlayersPiece && !canMoveHere && !isDev) {
+              // In dev mode with allowAnyColorMove, allow clicking any piece
+              const canClickAnyPiece = devMode && allowAnyColorMove
+
+              if (tileContainsOtherPlayersPiece && !canMoveHere && !isDev && !canClickAnyPiece) {
                 setSelected(null)
                 return
+              }
+
+              if (verboseLogging && tile.piece) {
+                console.log('[Dev] Clicked tile:', tile.position, 'Piece:', tile.piece?.type, tile.piece?.color)
               }
 
               canMoveHere
@@ -330,6 +402,23 @@ export const BoardComponent: FC<{
             const pieceId = tile.piece?.getId() ?? `empty-${j}-${i}`
             const isFullModel = tile.piece?.type === `pawn` || (tile.piece?.type === `rook` && tile.piece?.color === `white`)
 
+            // Check if piece should be visible (for isolation mode)
+            const pieceVisible = shouldShowPiece(tile.piece)
+
+            // Calculate position - center isolated pieces
+            const piecePosition: [number, number, number] = isolatedPiece && pieceVisible && tile.piece
+              ? [3.5, 0.5, 3.5] // Center of board
+              : [j, 0.5, i]
+
+            // Apply rotation from debug panel for isolated pieces
+            const pieceRotationRadians = isolatedPiece && pieceVisible && tile.piece
+              ? [
+                (pieceRotation.x * Math.PI) / 180,
+                (pieceRotation.y * Math.PI) / 180,
+                (pieceRotation.z * Math.PI) / 180,
+              ] as [number, number, number]
+              : [0, 0, 0] as [number, number, number]
+
             return (
               <group key={`${j}-${i}`}>
                 <TileComponent
@@ -338,14 +427,23 @@ export const BoardComponent: FC<{
                   onClick={handleClick}
                   canMoveHere={canMoveHere?.newPosition ?? null}
                 />
-                <MeshWrapper key={pieceId} {...props} isFullModel={isFullModel}>
-                  {tile.piece?.type === `pawn` && <PawnModel {...props} />}
-                  {tile.piece?.type === `rook` && <RookComponent {...props} />}
-                  {tile.piece?.type === `knight` && <KnightComponent />}
-                  {tile.piece?.type === `bishop` && <BishopComponent />}
-                  {tile.piece?.type === `queen` && <QueenComponent />}
-                  {tile.piece?.type === `king` && <KingComponent />}
-                </MeshWrapper>
+                {pieceVisible && (
+                  <MeshWrapper
+                    key={pieceId}
+                    {...props}
+                    position={piecePosition}
+                    isFullModel={isFullModel}
+                  >
+                    <group rotation={pieceRotationRadians}>
+                      {tile.piece?.type === `pawn` && <PawnModel {...props} />}
+                      {tile.piece?.type === `rook` && <RookComponent {...props} />}
+                      {tile.piece?.type === `knight` && <KnightComponent />}
+                      {tile.piece?.type === `bishop` && <BishopComponent />}
+                      {tile.piece?.type === `queen` && <QueenComponent />}
+                      {tile.piece?.type === `king` && <KingComponent />}
+                    </group>
+                  </MeshWrapper>
+                )}
               </group>
             )
           })

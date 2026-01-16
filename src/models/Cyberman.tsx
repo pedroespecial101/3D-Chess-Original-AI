@@ -29,11 +29,14 @@ type GLTFResult = GLTF & {
 
 export const CybermanModel: React.FC<ModelProps> = (props) => {
   const group = React.useRef<THREE.Group>(null)
-  const { scene } = useGLTF('/cyberman.glb')
+  const { scene, materials } = useGLTF('/cyberman.glb') as unknown as GLTFResult & { materials: GLTFResult['materials'] }
   const clone = React.useMemo(() => SkeletonUtils.clone(scene), [scene])
   const { nodes } = useGraph(clone) as GLTFResult
   const { color, isSelected, pieceIsBeingReplaced } = props
   const materialProps = { color, isSelected, pieceIsBeingReplaced }
+
+  // Get the original material - Cyberman uses a single material for all meshes
+  const originalMaterial = materials?.['Scene_-_Root'] || null
 
   // Scale to match other pieces - Cyberman is humanoid, adjust scale accordingly
   return (
@@ -47,13 +50,13 @@ export const CybermanModel: React.FC<ModelProps> = (props) => {
                   <group name="Object_5">
                     <primitive object={nodes._rootJoint} />
                     <skinnedMesh name="Object_70" geometry={nodes.Object_70.geometry} skeleton={nodes.Object_70.skeleton}>
-                      <PieceMaterial {...materialProps} />
+                      <PieceMaterial {...materialProps} originalMaterial={originalMaterial} />
                     </skinnedMesh>
                     <skinnedMesh name="Object_72" geometry={nodes.Object_72.geometry} skeleton={nodes.Object_72.skeleton}>
-                      <PieceMaterial {...materialProps} />
+                      <PieceMaterial {...materialProps} originalMaterial={originalMaterial} />
                     </skinnedMesh>
                     <skinnedMesh name="Object_74" geometry={nodes.Object_74.geometry} skeleton={nodes.Object_74.skeleton}>
-                      <PieceMaterial {...materialProps} />
+                      <PieceMaterial {...materialProps} originalMaterial={originalMaterial} />
                     </skinnedMesh>
                   </group>
                 </group>

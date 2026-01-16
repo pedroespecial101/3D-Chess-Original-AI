@@ -9,13 +9,18 @@
 - Restored Knight, Bishop, Queen, and King pieces that were not rendering on the board
 - Converted these components to "full model" pattern (matching Dalek/K9/Tardis/Cyberman structure)
 - Fixed React infinite loop in IsolationMiniBoard by adding `useShallow` to Zustand selector
+- Fixed temporary pieces appearing red - removed `originalMaterial` prop to force metallic mode with proper black/white coloring
 
 ### Changed
-- Changed default TextureMode from `metallic` to `hybrid` - blends original textures with metallic properties
+- Changed default TextureMode from `metallic` to `hybrid` for Doctor Who models
 - All piece types now use `isFullModel={true}` in Board.tsx for consistent rendering
+- Temporary pieces (Knight, Bishop, Queen, King) use METALLIC mode for proper coloring
 
-### Technical Details
-The standard chess pieces (Knight, Bishop, Queen, King) were using an outdated component pattern that tried to attach geometry directly. They've been refactored to export `*Model` components (e.g., `KnightModel`) that return complete `<mesh>` elements with geometry and materials, matching the Doctor Who themed pieces. These are temporary placeholders until Doctor Who models are added.
+### Documentation
+- Added comprehensive "Temporary Piece Implementation" section to README.md
+- Added "Scale Reference Guide" with model scales for all piece types
+- Added important warning: temp pieces must NOT pass `originalMaterial` to `PieceMaterial`
+- Added rule in `.agent/rules/` about temporary piece implementation
 
 ---
 

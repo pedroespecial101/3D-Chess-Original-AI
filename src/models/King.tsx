@@ -19,18 +19,16 @@ type GLTFResult = GLTF & {
 
 // Temporary component using original GLTF king model
 // TODO: Replace with Doctor Who themed model when available
+// NOTE: Do NOT pass originalMaterial - forces metallic mode for proper black/white coloring
 export const KingModel: FC<ModelProps> = (props) => {
-  const { nodes, materials } = useGLTF(`/king.gltf`) as unknown as GLTFResult
+  const { nodes } = useGLTF(`/king.gltf`) as unknown as GLTFResult
   const { color, isSelected, pieceIsBeingReplaced } = props
   const materialProps = { color, isSelected, pieceIsBeingReplaced }
 
   return (
     <group dispose={null} scale={0.85}>
       <mesh geometry={nodes.Object001004.geometry}>
-        <PieceMaterial
-          {...materialProps}
-          originalMaterial={materials[`Object001_mtl.004`]}
-        />
+        <PieceMaterial {...materialProps} />
       </mesh>
     </group>
   )

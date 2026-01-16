@@ -147,12 +147,110 @@ Browser (Board.tsx) → aiClient.ts → UCI Server (192.168.1.187:3001) → Stoc
 |-------|----------------|-----------------|--------|
 | Pawns | K-9 (Robot Dog) | Daleks | ✅ Done |
 | Rooks | TARDIS | Cybermen | ✅ Done |
-| Knights | TBD | TBD | ⏳ Pending |
-| Bishops | TBD | TBD | ⏳ Pending |
-| Queen | TBD | TBD | ⏳ Pending |
-| King | TBD | TBD | ⏳ Pending |
+| Knights | *Standard (temp)* | *Standard (temp)* | ⏳ Pending DW model |
+| Bishops | *Standard (temp)* | *Standard (temp)* | ⏳ Pending DW model |
+| Queen | *Standard (temp)* | *Standard (temp)* | ⏳ Pending DW model |
+| King | *Standard (temp)* | *Standard (temp)* | ⏳ Pending DW model |
 
 ---
+
+## 📐 Temporary Piece Implementation (Knight, Bishop, Queen, King)
+
+Until Doctor Who themed models are created, standard chess pieces from GLTF files are used as placeholders. This section documents the implementation for future replacement.
+
+> [!IMPORTANT]
+> **Temporary pieces use METALLIC mode, not hybrid mode.** Do NOT pass `originalMaterial` to `PieceMaterial` - this forces metallic mode which gives proper white/silver and black/dark coloring. If you pass `originalMaterial`, the pieces will appear red/colored incorrectly.
+
+### Problem Solved
+The original piece components (`KnightComponent`, `BishopComponent`, etc.) used an outdated pattern that tried to attach raw geometry to the parent `MeshWrapper` mesh. This broke when we switched to the "full model" pattern for Doctor Who pieces.
+
+### Solution: Full Model Pattern
+All pieces now use the **full model pattern** - each component exports a `*Model` component (e.g., `KnightModel`) that returns a complete `<group>` containing `<mesh>` elements with geometry and `PieceMaterial`.
+
+```tsx
+// Example from Knight.tsx - NOTE: NO originalMaterial passed!
+export const KnightModel: FC<ModelProps> = (props) => {
+  const { nodes } = useGLTF(`/knight.gltf`) as unknown as GLTFResult
+  const { color, isSelected, pieceIsBeingReplaced } = props
+  const materialProps = { color, isSelected, pieceIsBeingReplaced }
+
+  return (
+    <group dispose={null} scale={0.95}>
+      <mesh geometry={nodes.Object001005.geometry}>
+        {/* NO originalMaterial = forces metallic mode = correct black/white colors */}
+        <PieceMaterial {...materialProps} />
+      </mesh>
+    </group>
+  )
+}
+```
+
+### When Replacing with Doctor Who Models
+
+When new Doctor Who models are ready:
+1. **DO pass `originalMaterial`** - DW models should use hybrid mode for their textures
+2. **Change scale** from ~0.9 to ~180 (matching Dalek/K9/etc)
+3. **Add rotation** for white pieces: `rotation={[0, Math.PI, 0]}`
+
+### Board.tsx Changes
+In `Board.tsx`, all pieces now use `isFullModel={true}`:
+```tsx
+const isFullModel = true  // All pieces now use full model pattern
+```
+
+---
+
+## 📏 Scale Reference Guide
+
+### Understanding the Scale System
+
+The `MeshWrapper` component applies a base scale of **0.03** internally. All piece models must compensate for this.
+
+| Model Type | Raw GLTF Scale | Compensating Scale | Effective Size | Notes |
+|------------|----------------|-------------------|----------------|-------|
+| **Dalek** | ~0.005 | `180` | 5.4 units | Large Doctor Who model |
+| **K-9** | ~0.005 | `180` | 5.4 units | Same as Dalek |
+| **TARDIS** | ~0.005 | `180` | 5.4 units | Same as Dalek |
+| **Cyberman** | ~0.005 | `180` | 5.4 units | Same as Dalek |
+| **Knight** | ~0.025 | `0.95` | ~0.03 units | Standard GLTF piece |
+| **Bishop** | ~0.025 | `0.90` | ~0.03 units | Standard GLTF piece |
+| **Queen** | ~0.025 | `0.85` | ~0.03 units | Standard GLTF piece |
+| **King** | ~0.025 | `0.85` | ~0.03 units | Standard GLTF piece |
+
+### Why Different Scales?
+
+1. **Doctor Who models** (Dalek, K9, etc.) are exported at a very small scale from Blender, requiring large 180x compensation
+2. **Standard GLTF pieces** (knight.gltf, etc.) are at ~0.025 scale in their files, needing only ~0.85-0.95x adjustment
+3. The **MeshWrapper's 0.03 scale** is the common denominator all models work against
+
+### Formula for New Doctor Who Models
+
+When adding new Doctor Who models, start with `scale={180}` and adjust:
+- If piece is too small → increase scale
+- If piece is too large → decrease scale
+- Target: piece should fit within one board tile with appropriate height proportions
+
+### Files to Update When Replacing Temporary Pieces
+
+When Doctor Who models are ready for Knight/Bishop/Queen/King:
+
+1. `src/models/Knight.tsx` → Replace `KnightModel` internals
+2. `src/models/Bishop.tsx` → Replace `BishopModel` internals  
+3. `src/models/Queen.tsx` → Replace `QueenModel` internals
+4. `src/models/King.tsx` → Replace `KingModel` internals
+5. Update scale from ~0.9 to ~180 (matching other DW models)
+6. Add white piece rotation: `rotation={[0, Math.PI, 0]}`
+7. Copy new GLB files to `public/`
+
+### GLTF Node/Material Key Pattern
+
+Standard GLTF pieces follow this naming pattern:
+- **Knight**: `nodes.Object001005`, `materials['Object001_mtl.005']`
+- **Bishop**: `nodes.Object001002`, `materials['Object001_mtl.002']`
+- **Queen**: `nodes.Object001003`, `materials['Object001_mtl.003']`
+- **King**: `nodes.Object001004`, `materials['Object001_mtl.004']`
+
+Use `npx gltfjsx@latest model.glb --output /tmp/check.tsx` to inspect any GLTF file structure.
 
 ## 🚀 Getting Started
 

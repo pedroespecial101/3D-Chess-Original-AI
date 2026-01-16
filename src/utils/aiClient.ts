@@ -32,7 +32,7 @@ export type MoveResponse = {
 class ChessEngineClient {
   private baseUrl: string
 
-  constructor(baseUrl = 'http://localhost:3001') {
+  constructor(baseUrl = 'http://192.168.1.187:3001') {
     this.baseUrl = baseUrl
   }
 

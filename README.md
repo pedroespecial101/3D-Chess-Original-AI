@@ -59,7 +59,7 @@ Helper functions.
 The AI system is designed with a "Skill Level Interface Pattern".
 -   **Configuration**: managed in `src/state/ai.ts`.
 -   **Presets**: `learner`, `beginner`, `club`, `expert`, `master`.
--   **Communication**: The app expects a local server running at `http://localhost:3001` (default).
+-   **Communication**: The app expects a local server running at `http://192.168.1.187:3001` (default).
 -   **Debug**: Enable `DEBUG` in `src/utils/aiClient.ts` to see detailed logs of engine communication in the browser console.
 
 **See `documents/AI_API_Integration_Guide.md` for full API details.**
@@ -80,7 +80,7 @@ npm run dev
 ### Running the AI Backend
 This project **requires** the separate AI Server project to be running for 'Play vs AI' to work.
 *   Ensure the external Chess Engine Server is running on port `3001`.
-*   Endpoint checks: `GET http://localhost:3001/health`.
+*   Endpoint checks: `GET http://192.168.1.187:3001/health`.
 
 ### Common Tasks for AI Agents
 *   **Adding a new piece**: Add model to `src/models`, logic to `src/logic/pieces`, and update `src/logic/pieces/index.ts`.

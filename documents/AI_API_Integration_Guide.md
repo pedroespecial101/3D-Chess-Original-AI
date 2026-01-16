@@ -35,7 +35,7 @@ Content-Type: application/json
 
 ## API Base URL
 
-**Default:** `http://localhost:3001`
+**Default:** `http://192.168.1.187:3001`
 
 **Production:** Update based on deployment location
 
@@ -393,7 +393,7 @@ Error: "Invalid position"
 ### 1. Initialization
 ```javascript
 // Initialize once at the start of the game
-await fetch('http://localhost:3001/api/engine/init', {
+await fetch('http://192.168.1.187:3001/api/engine/init', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
@@ -415,7 +415,7 @@ moves.push('e2e4');
 moves.push('e7e5');
 
 // Request next move
-const response = await fetch('http://localhost:3001/api/engine/move', {
+const response = await fetch('http://192.168.1.187:3001/api/engine/move', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ moves, depth: 15 })
@@ -427,7 +427,7 @@ const response = await fetch('http://localhost:3001/api/engine/move', {
 // Use a chess library to manage board state and generate FEN
 const fen = currentBoardState.fen();
 
-const response = await fetch('http://localhost:3001/api/engine/move', {
+const response = await fetch('http://192.168.1.187:3001/api/engine/move', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ position: fen, depth: 15 })
@@ -439,7 +439,7 @@ const response = await fetch('http://localhost:3001/api/engine/move', {
 **For consistent difficulty (recommended):**
 ```javascript
 // Set once during init
-await fetch('http://localhost:3001/api/engine/init', {
+await fetch('http://192.168.1.187:3001/api/engine/init', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ eloRating: 1500 })
@@ -449,7 +449,7 @@ await fetch('http://localhost:3001/api/engine/init', {
 **For dynamic difficulty:**
 ```javascript
 // Override per move
-await fetch('http://localhost:3001/api/engine/move', {
+await fetch('http://192.168.1.187:3001/api/engine/move', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
@@ -487,7 +487,7 @@ Balance between speed and strength:
 ### 5. Cleanup
 ```javascript
 // When game is complete or user exits
-await fetch('http://localhost:3001/api/engine/quit', {
+await fetch('http://192.168.1.187:3001/api/engine/quit', {
   method: 'DELETE'
 });
 ```
@@ -496,7 +496,7 @@ await fetch('http://localhost:3001/api/engine/quit', {
 ```javascript
 async function getEngineMove(position) {
   try {
-    const response = await fetch('http://localhost:3001/api/engine/move', {
+    const response = await fetch('http://192.168.1.187:3001/api/engine/move', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ position, depth: 15 })
@@ -504,7 +504,7 @@ async function getEngineMove(position) {
     
     if (response.status === 400) {
       // Likely not initialized - initialize and retry
-      await fetch('http://localhost:3001/api/engine/init', {
+      await fetch('http://192.168.1.187:3001/api/engine/init', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ skillLevel: 10 })
@@ -530,7 +530,7 @@ async function getEngineMove(position) {
 
 ```javascript
 class ChessEngineClient {
-  constructor(baseUrl = 'http://localhost:3001') {
+  constructor(baseUrl = 'http://192.168.1.187:3001') {
     this.baseUrl = baseUrl;
     this.moves = [];
   }

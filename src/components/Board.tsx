@@ -181,7 +181,7 @@ export const BoardComponent: FC<{
         const newBoard = copyBoard(prev)
         if (!movingTo.move.piece) return prev
         const selectedTile = getTile(newBoard, movingTo.move.piece.position)
-        const tileToMoveTo = getTile(newBoard, tile.position)
+        const tileToMoveTo = getTile(newBoard, movingTo.move.newPosition)
         if (!selectedTile || !tileToMoveTo) return prev
 
         if (
@@ -225,7 +225,7 @@ export const BoardComponent: FC<{
         }
 
         tileToMoveTo.piece = selectedTile.piece
-          ? { ...selectedTile.piece, position: tile.position }
+          ? { ...selectedTile.piece, position: movingTo.move.newPosition }
           : null
         selectedTile.piece = null
         return newBoard

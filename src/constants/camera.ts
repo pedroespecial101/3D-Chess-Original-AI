@@ -5,14 +5,14 @@
 /** Default camera position [x, y, z] */
 export const DEFAULT_CAMERA_POSITION: [number, number, number] = [-12, 5, 6]
 
-/** Camera position when focusing on an isolated piece */
+/** Camera position when focusing on an isolated piece - close-up front view */
 export const ISOLATED_PIECE_CAMERA_POSITION: [number, number, number] = [
-  -6, 4, 4,
+  -0.01, 1.01, 2.02,
 ]
 
-/** Camera target when focusing on isolated piece (center of board) */
+/** Camera target when focusing on isolated piece (character body height) */
 export const ISOLATED_PIECE_CAMERA_TARGET: [number, number, number] = [
-  3.5, 0, 3.5,
+  0.05, 0.86, 0.04,
 ]
 
 /** Default minimum zoom distance (close-up) */

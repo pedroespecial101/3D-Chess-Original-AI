@@ -3,12 +3,68 @@
 ** Read README.md for AI coding agent focused project overview and documentation. **
 ** Follow the AI coding agent rules in .agent/rules/ **
 
+## [2026-01-17] - Per-Piece Material Overrides
+
+### Added
+- **`PieceMaterialOverrides` type**: New interface in `src/models/index.tsx` for per-piece material customization
+  - Supports: `metalness`, `roughness`, `baseColor`, `clearcoat`, `clearcoatRoughness`, `reflectivity`, `envMapIntensity`
+- **Weeping Angel stone presets**: Multiple documented material presets in `WeepingAngel.tsx`
+  - Classic Grey Stone (active default)
+  - Dark Slate
+  - Weathered Stone
+  - Cool Marble
+  - Cemetery Stone
+
+### Changed
+- Updated `PieceMaterial` component to accept `overrides` prop
+- Per-piece overrides take precedence over global texture mode settings
+- Weeping Angel now renders as non-metallic stone (fits the statue theme)
+- **Piece Isolation Camera**: Now zooms in closer with front-facing view for character preview
+
+---
+
+## [2026-01-17] - Test Suite & Documentation
+
+### Added
+- **Jest Test Suite**: Complete unit tests for chess logic (`npm test` - 51 tests)
+  - `board.test.ts`: Board creation, position matching, deep copy (11 tests)
+  - `knight.test.ts`: L-shaped movement, captures, blocking (5 tests)
+  - `pawn.test.ts`: Forward moves, captures, blocking (6 tests)
+  - `rook.test.ts`: Straight-line movement, blocking, captures (5 tests)
+  - `bishop.test.ts`: Diagonal movement, blocking, captures (5 tests)
+  - `queen.test.ts`: Combined rook+bishop movement (4 tests)
+  - `king.test.ts`: 8-direction moves, captures, castling (7 tests)
+  - `check.test.ts`: Check, checkmate, stalemate detection (8 tests)
+- **`.agent/rules/patterns.md`**: Documents hook extraction, component, constants, and factory patterns
+
+### Changed
+- **README.md**: Updated project structure (added hooks/, constants/, styles/); added Testing section with clear "what's tested vs not tested" guidance
+- **tsconfig.json**: Added Jest types
+
+---
+
+## [2026-01-17] - Deep Refactor: Split Board.tsx
+
+### Added
+- **`useAiTurn.ts`**: Hook for AI move logic, extracted from Board.tsx
+- **`useCameraControls.ts`**: Hook for camera reset, focus, and multiplayer sync
+- **`PieceRenderer.tsx`**: Component for piece type rendering logic
+
+### Changed
+- Board.tsx reduced from 577 to ~480 lines (~17% reduction)
+- Cleaner separation of concerns with logic in hooks and rendering in components
+- Debug mode now enables unlimited zoom and panning without sliders
+- Removed unused debug controls: Enable Panning, Min/Max Zoom sliders, Move Any Color, Free Move
+
+---
+
 ## [2026-01-17] - Weeping Angel as Black Knights
 
 ### Added
 - **Weeping Angel Model**: Black knights now use the iconic Doctor Who Weeping Angel model
 - Added `WeepingAngel.tsx` component with hybrid texture mode support
-- Added `/public/weepingAngel.glb` model file (optimized with gltfjsx)
+- Added `/public/weepingAngel.glb` model file (WA-G3D-texturedv1.0, optimized with gltfjsx)
+
 
 ### Changed
 - Updated `Board.tsx` to render Weeping Angel for black knights (white knights remain placeholder)

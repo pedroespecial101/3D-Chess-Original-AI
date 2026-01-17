@@ -14,11 +14,35 @@ import type * as THREE from 'three'
 
 import { useGameSettingsState } from '@/state/game'
 
+/**
+ * Per-piece material override options
+ * These allow individual pieces to customize their appearance
+ * regardless of the global texture mode setting.
+ */
+export type PieceMaterialOverrides = {
+  /** Override the metalness (0 = non-metallic, 1 = fully metallic) */
+  metalness?: number
+  /** Override the roughness (0 = smooth/shiny, 1 = rough/matte) */
+  roughness?: number
+  /** Override the base color */
+  baseColor?: string
+  /** Override clearcoat (0 = none, 1 = full clearcoat) */
+  clearcoat?: number
+  /** Override clearcoat roughness */
+  clearcoatRoughness?: number
+  /** Override reflectivity */
+  reflectivity?: number
+  /** Override environment map intensity */
+  envMapIntensity?: number
+}
+
 export type PieceMaterialProps =
   JSX.IntrinsicElements[`meshPhysicalMaterial`] & {
     isSelected: boolean
     pieceIsBeingReplaced: boolean
     originalMaterial?: THREE.Material | null
+    /** Optional per-piece material overrides */
+    overrides?: PieceMaterialOverrides
   }
 
 export const PieceMaterial: FC<PieceMaterialProps> = ({
@@ -26,6 +50,7 @@ export const PieceMaterial: FC<PieceMaterialProps> = ({
   isSelected,
   pieceIsBeingReplaced,
   originalMaterial,
+  overrides,
   ...props
 }) => {
   const textureMode = useGameSettingsState((state) => state.textureMode)
@@ -54,13 +79,13 @@ export const PieceMaterial: FC<PieceMaterialProps> = ({
     return (
       // @ts-ignore
       <animated.meshPhysicalMaterial
-        reflectivity={4}
-        color={color === `white` ? `#d9d9d9` : `#7c7c7c`}
+        reflectivity={overrides?.reflectivity ?? 4}
+        color={overrides?.baseColor ?? (color === `white` ? `#d9d9d9` : `#7c7c7c`)}
         emissive={isSelected ? `#733535` : `#000000`}
-        metalness={1}
-        roughness={0.5}
+        metalness={overrides?.metalness ?? 1}
+        roughness={overrides?.roughness ?? 0.5}
         attach="material"
-        envMapIntensity={0.2}
+        envMapIntensity={overrides?.envMapIntensity ?? 0.2}
         opacity={opacity}
         transparent={true}
         {...props}
@@ -74,15 +99,15 @@ export const PieceMaterial: FC<PieceMaterialProps> = ({
       // @ts-ignore
       <animated.meshPhysicalMaterial
         map={originalProps?.map}
-        color={originalProps?.color || `#ffffff`}
+        color={overrides?.baseColor ?? originalProps?.color ?? `#ffffff`}
         normalMap={originalProps?.normalMap}
         aoMap={originalProps?.aoMap}
         emissive={isSelected ? `#733535` : `#000000`}
         emissiveIntensity={isSelected ? 0.5 : 0}
-        metalness={originalProps?.metalness ?? 0}
-        roughness={originalProps?.roughness ?? 1}
+        metalness={overrides?.metalness ?? originalProps?.metalness ?? 0}
+        roughness={overrides?.roughness ?? originalProps?.roughness ?? 1}
         attach="material"
-        envMapIntensity={0.3}
+        envMapIntensity={overrides?.envMapIntensity ?? 0.3}
         opacity={opacity}
         transparent={true}
         {...props}
@@ -95,18 +120,18 @@ export const PieceMaterial: FC<PieceMaterialProps> = ({
     // @ts-ignore
     <animated.meshPhysicalMaterial
       map={originalProps?.map}
-      color={originalProps?.color || `#ffffff`}
+      color={overrides?.baseColor ?? originalProps?.color ?? `#ffffff`}
       normalMap={originalProps?.normalMap}
       aoMap={originalProps?.aoMap}
       emissive={isSelected ? `#733535` : `#000000`}
       emissiveIntensity={isSelected ? 0.5 : 0}
-      metalness={0.7}
-      roughness={0.35}
-      reflectivity={2}
+      metalness={overrides?.metalness ?? 0.7}
+      roughness={overrides?.roughness ?? 0.35}
+      reflectivity={overrides?.reflectivity ?? 2}
       attach="material"
-      envMapIntensity={0.4}
-      clearcoat={0.3}
-      clearcoatRoughness={0.25}
+      envMapIntensity={overrides?.envMapIntensity ?? 0.4}
+      clearcoat={overrides?.clearcoat ?? 0.3}
+      clearcoatRoughness={overrides?.clearcoatRoughness ?? 0.25}
       opacity={opacity}
       transparent={true}
       {...props}
@@ -152,21 +177,21 @@ export const MeshWrapper: FC<ModelProps> = ({
           movingTo
             ? variants.move({ movingTo, isSelected: true })
             : pieceIsBeingReplaced
-            ? variants.replace({ movingTo, isSelected })
-            : isSelected
-            ? variants.select({ movingTo, isSelected })
-            : variants.initial({ movingTo, isSelected })
+              ? variants.replace({ movingTo, isSelected })
+              : isSelected
+                ? variants.select({ movingTo, isSelected })
+                : variants.initial({ movingTo, isSelected })
         }
         transition={
           movingTo
             ? transitions.moveTo
             : pieceIsBeingReplaced
-            ? transitions.replace
-            : isSelected
-            ? transitions.select
-            : wasSelected
-            ? transitions.wasSelected
-            : transitions.initial
+              ? transitions.replace
+              : isSelected
+                ? transitions.select
+                : wasSelected
+                  ? transitions.wasSelected
+                  : transitions.initial
         }
         onAnimationComplete={() => {
           if (movingTo) {

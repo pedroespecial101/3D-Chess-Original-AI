@@ -22,22 +22,12 @@ import {
 
 export const DebugSettings: FC = () => {
   const {
-    minZoom,
-    setMinZoom,
-    maxZoom,
-    setMaxZoom,
     showDebugSettings,
     setShowDebugSettings,
-    enablePanning,
-    setEnablePanning,
     triggerCameraReset,
     // Dev mode state
     devMode,
-    allowAnyColorMove,
-    setAllowAnyColorMove,
     isolatedPiece,
-    freeMove,
-    setFreeMove,
     verboseLogging,
     setVerboseLogging,
     animationSpeed,
@@ -54,22 +44,12 @@ export const DebugSettings: FC = () => {
     setTextureMode,
   } = useGameSettingsState(
     useShallow((state) => ({
-      minZoom: state.minZoom,
-      setMinZoom: state.setMinZoom,
-      maxZoom: state.maxZoom,
-      setMaxZoom: state.setMaxZoom,
       showDebugSettings: state.showDebugSettings,
       setShowDebugSettings: state.setShowDebugSettings,
-      enablePanning: state.enablePanning,
-      setEnablePanning: state.setEnablePanning,
       triggerCameraReset: state.triggerCameraReset,
       // Dev mode
       devMode: state.devMode,
-      allowAnyColorMove: state.allowAnyColorMove,
-      setAllowAnyColorMove: state.setAllowAnyColorMove,
       isolatedPiece: state.isolatedPiece,
-      freeMove: state.freeMove,
-      setFreeMove: state.setFreeMove,
       verboseLogging: state.verboseLogging,
       setVerboseLogging: state.setVerboseLogging,
       animationSpeed: state.animationSpeed,
@@ -90,8 +70,6 @@ export const DebugSettings: FC = () => {
   if (!showDebugSettings) return null
 
   const handleCameraReset = () => {
-    setMinZoom(3)
-    setMaxZoom(25)
     triggerCameraReset()
   }
 
@@ -193,26 +171,6 @@ export const DebugSettings: FC = () => {
       {devMode && (
         <div css={sectionStyle}>
           <span css={sectionTitleStyle}>🛠️ Development Mode</span>
-
-          <div css={toggleRowStyle}>
-            <label css={labelStyle}>Move Any Color</label>
-            <input
-              type="checkbox"
-              checked={allowAnyColorMove}
-              onChange={(e) => setAllowAnyColorMove(e.target.checked)}
-              css={checkboxStyle}
-            />
-          </div>
-
-          <div css={toggleRowStyle}>
-            <label css={labelStyle}>Free Move (No Rules)</label>
-            <input
-              type="checkbox"
-              checked={freeMove}
-              onChange={(e) => setFreeMove(e.target.checked)}
-              css={checkboxStyle}
-            />
-          </div>
 
           <div css={toggleRowStyle}>
             <label css={labelStyle}>Verbose Logging</label>
@@ -334,48 +292,6 @@ export const DebugSettings: FC = () => {
       {/* Camera Controls */}
       <div css={sectionStyle}>
         <span css={sectionTitleStyle}>📷 Camera Controls</span>
-
-        <div css={toggleRowStyle}>
-          <label css={labelStyle}>Enable Panning</label>
-          <input
-            type="checkbox"
-            checked={enablePanning}
-            onChange={(e) => setEnablePanning(e.target.checked)}
-            css={checkboxStyle}
-          />
-        </div>
-
-        <div css={sliderContainerStyle}>
-          <div css={toggleRowStyle}>
-            <label css={labelStyle}>Min Zoom (Zoom In)</label>
-            <span css={valueDisplayStyle}>{minZoom}</span>
-          </div>
-          <input
-            type="range"
-            min="1"
-            max="15"
-            step="0.5"
-            value={minZoom}
-            onChange={(e) => setMinZoom(parseFloat(e.target.value))}
-            css={sliderStyle}
-          />
-        </div>
-
-        <div css={sliderContainerStyle}>
-          <div css={toggleRowStyle}>
-            <label css={labelStyle}>Max Zoom (Zoom Out)</label>
-            <span css={valueDisplayStyle}>{maxZoom}</span>
-          </div>
-          <input
-            type="range"
-            min="15"
-            max="50"
-            step="1"
-            value={maxZoom}
-            onChange={(e) => setMaxZoom(parseFloat(e.target.value))}
-            css={sliderStyle}
-          />
-        </div>
 
         <button onClick={handleCameraReset} css={buttonStyle}>
           Reset Camera & Zoom

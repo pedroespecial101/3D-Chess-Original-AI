@@ -44,36 +44,81 @@ A Doctor Who themed 3D chess game built with React Three Fiber and Socket.io. Fe
 ```
 src/
 ├── components/           # React UI components
-│   ├── Board.tsx         # Core 3D game component (AI turns, debug features)
-│   ├── GameCreation.tsx  # Game setup UI (Online/AI tabs, Debug toggle)
+│   ├── Board.tsx         # Core 3D game component
+│   ├── PieceRenderer.tsx # Piece type → model mapping
+│   ├── GameCreation.tsx  # Game setup UI (Online/AI tabs)
 │   ├── DebugSettings.tsx # Runtime debug panel
-│   ├── AiSettings.tsx    # AI difficulty configuration
 │   └── ...
-├── logic/                # Pure chess logic (framework agnostic)
-│   ├── board.ts          # Board representation, tile utilities
-│   └── pieces/           # Move generation per piece type
+├── hooks/                # Custom React hooks
+│   ├── useAiTurn.ts      # AI move logic
+│   ├── useAiGameStart.ts # AI game initialization
+│   └── useCameraControls.ts # Camera reset/focus/sync
+├── constants/            # Named constants
+│   ├── camera.ts         # Camera positions, zoom limits
+│   └── board.ts          # Board dimensions
+├── styles/               # Shared CSS-in-JS
+│   └── shared.ts         # Reusable Emotion styles
+├── logic/                # Pure chess logic (TESTED)
+│   ├── board.ts          # Board representation, utilities
+│   ├── pieces/           # Move generation per piece type
+│   └── __tests__/        # Unit tests
 ├── models/               # 3D piece components
-│   ├── index.tsx         # MeshWrapper, PieceMaterial (shared utilities)
+│   ├── index.tsx         # MeshWrapper, PieceMaterial
+│   ├── SimpleGLTFModel.tsx # Factory for standard pieces
 │   ├── Pawn.tsx          # K-9 (white) / Dalek (black)
-│   ├── Rook.tsx          # TARDIS (white) / Cyberman (black)
-│   ├── K9.tsx, Dalek.tsx, Tardis.tsx, Cyberman.tsx
 │   └── ...
 ├── state/                # Zustand stores
 │   ├── game.ts           # Turn, gameType, debug settings
 │   ├── ai.ts             # AI config and difficulty presets
-│   ├── history.ts        # Move history
-│   └── player.ts         # User identity, room info
+│   └── ...
 ├── utils/
 │   ├── aiClient.ts       # UCI engine API client
-│   ├── chess.ts          # UCI notation converters
-│   └── socket.ts         # Socket.io setup
+│   └── chess.ts          # UCI notation converters
 └── pages/
     └── index.tsx         # Main game page
-
-public/
-├── k9.glb, dalek.glb, tardis.glb, cyberman.glb  # 3D models
-└── ...
 ```
+
+---
+
+## 🧪 Testing
+
+### Running Tests
+
+```bash
+npm test              # Run all tests
+npm run test:watch    # Watch mode (re-run on file changes)
+npm run test:coverage # Coverage report
+```
+
+### What IS Tested (Automated)
+
+| Area | Files | What's Covered |
+|------|-------|----------------|
+| **Board utilities** | `board.test.ts` | Board creation, position matching, deep copy |
+| **Knight moves** | `knight.test.ts` | L-shaped movement, blocking, captures |
+
+> [!TIP]
+> Run `npm test` after changes to `src/logic/` to catch regressions.
+
+### What is NOT Tested ⚠️
+
+These areas require **manual testing** when making changes:
+
+| Area | Why Not Automated | What to Check |
+|------|-------------------|---------------|
+| **3D Rendering** | Needs WebGL/GPU | Models appear, correct positions |
+| **Animations** | Visual/timing | Pieces move smoothly |
+| **AI Moves** | External server | AI responds, correct moves |
+| **Multiplayer** | Socket.io server | Sync works between clients |
+| **Camera Controls** | 3D interaction | Zoom, pan, reset work |
+| **UI Components** | Complex mocking | Buttons, forms respond |
+| **Model Loading** | GLTF/GLB files | New models load correctly |
+
+> [!CAUTION]
+> **Breaking changes to watch for:**
+> - Changes to `src/logic/pieces/` - run tests!
+> - Changes to model files - visually verify in browser
+> - Changes to hooks - test the specific feature manually
 
 ---
 

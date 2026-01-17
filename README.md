@@ -154,7 +154,7 @@ Browser (Board.tsx) → aiClient.ts → UCI Server (192.168.1.187:3001) → Stoc
 |-------|----------------|-----------------|--------|
 | Pawns | K-9 (Robot Dog) | Daleks | ✅ Done |
 | Rooks | TARDIS | Cybermen | ✅ Done |
-| Knights | *Standard (temp)* | *Standard (temp)* | ⏳ Pending DW model |
+| Knights | *Standard (temp)* | Weeping Angels | ⏳ White: Pending DW model |
 | Bishops | *Standard (temp)* | *Standard (temp)* | ⏳ Pending DW model |
 | Queen | *Standard (temp)* | *Standard (temp)* | ⏳ Pending DW model |
 | King | *Standard (temp)* | *Standard (temp)* | ⏳ Pending DW model |

@@ -3,6 +3,19 @@
 ** Read README.md for AI coding agent focused project overview and documentation. **
 ** Follow the AI coding agent rules in .agent/rules/ **
 
+## [2026-01-17] - Weeping Angel as Black Knights
+
+### Added
+- **Weeping Angel Model**: Black knights now use the iconic Doctor Who Weeping Angel model
+- Added `WeepingAngel.tsx` component with hybrid texture mode support
+- Added `/public/weepingAngel.glb` model file (optimized with gltfjsx)
+
+### Changed
+- Updated `Board.tsx` to render Weeping Angel for black knights (white knights remain placeholder)
+- Black knights now have distinct Doctor Who theming (first piece type split by color)
+
+---
+
 ## [2026-01-16] - Post-Merge Refactoring (Medium Effort)
 
 ### Added

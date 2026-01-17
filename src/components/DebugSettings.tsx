@@ -3,6 +3,7 @@ import React from 'react'
 
 import { css } from '@emotion/react'
 import { FaPlay, FaPause, FaStepForward, FaUndo } from 'react-icons/fa'
+import { useShallow } from 'zustand/react/shallow'
 
 import { IsolationMiniBoard } from './IsolationMiniBoard'
 import { useGameSettingsState } from '@/state/game'
@@ -17,9 +18,7 @@ import {
   buttonStyle,
   smallButtonStyle,
   valueDisplayStyle,
-  primaryButtonActiveStyle,
 } from '@/styles/shared'
-import { useShallow } from 'zustand/react/shallow'
 
 export const DebugSettings: FC = () => {
   const {

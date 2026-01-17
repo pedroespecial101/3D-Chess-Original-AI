@@ -65,11 +65,13 @@ export const GameCreation: FC = () => {
     if (autoStartAttempted || joinedRoom) return
 
     const urlParams = new URLSearchParams(window.location.search)
-    const modeParam = urlParams.get('mode')
+    const modeParam = urlParams.get(`mode`)
 
-    if (modeParam === 'debug') {
+    if (modeParam === `debug`) {
       setAutoStartAttempted(true)
-      console.log('[GameCreation] Auto-starting AI game with debug mode via URL parameter')
+      console.log(
+        `[GameCreation] Auto-starting AI game with debug mode via URL parameter`,
+      )
       startAiGameWithDebug()
     }
   }, [autoStartAttempted, joinedRoom, startAiGameWithDebug])
